@@ -1,25 +1,25 @@
 importScripts(
-    './SolveUtility.js',
-    './Board.js',
-    './SumGroup.js',
-    './SumCellsHelper.js',
-    './ConstraintBuilder.js',
+    'SolveUtility.js',
+    'Board.js',
+    'SumGroup.js',
+    'SumCellsHelper.js',
+    'ConstraintBuilder.js',
 
     // Constraints
-    './Constraint/Constraint.js',
-    './Constraint/ArrowSumConstraint.js',
-    './Constraint/FixedSumConstraint.js',
-    './Constraint/GeneralCellPairConstraint.js',
-    './Constraint/KillerCageConstraint.js',
-    './Constraint/RegionSumLinesConstraint.js',
+    'Constraint/Constraint.js',
+    'Constraint/ArrowSumConstraint.js',
+    'Constraint/FixedSumConstraint.js',
+    'Constraint/GeneralCellPairConstraint.js',
+    'Constraint/KillerCageConstraint.js',
+    'Constraint/RegionSumLinesConstraint.js',
 
     // Logical Steps
-    './LogicalStep/LogicalStep.js',
-    './LogicalStep/CellForcing.js',
-    './LogicalStep/ConstraintLogic.js',
-    './LogicalStep/HiddenSingle.js',
-    './LogicalStep/NakedSingle.js',
-    './LogicalStep/NakedTupleAndPointing.js'
+    'LogicalStep/LogicalStep.js',
+    'LogicalStep/CellForcing.js',
+    'LogicalStep/ConstraintLogic.js',
+    'LogicalStep/HiddenSingle.js',
+    'LogicalStep/NakedSingle.js',
+    'LogicalStep/NakedTupleAndPointing.js'
 );
 
 let eventCanceled = false;
