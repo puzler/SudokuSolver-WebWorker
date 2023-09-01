@@ -1,0 +1,25 @@
+{
+  "name": "@charliepugh92/sudokusolver-webworker",
+  "version": "0.0.1",
+  "description": "A webworker plugin that acts as a solver for variant sudoku puzzles",
+  "main": "SolveWorker.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charliepugh92/SudokuSolver-WebWorker.git"
+  },
+  "keywords": [
+    "sudoku",
+    "solver",
+    "webworker",
+    "javascript"
+  ],
+  "author": "charliepugh92",
+  "license": "LGPL-2.1-or-later",
+  "bugs": {
+    "url": "https://github.com/charliepugh92/SudokuSolver-WebWorker/issues"
+  },
+  "homepage": "https://github.com/charliepugh92/SudokuSolver-WebWorker#readme"
+}
