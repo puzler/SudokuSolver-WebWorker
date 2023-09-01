@@ -152,16 +152,8 @@ self.cellName = function (cellIndex, size) {
     return `R${row + 1}C${col + 1}`;
 };
 
-self.cellIndexFromName = function(name, size) {
-	const regex = /r(\d+)c(\d+)/;
-	const match = regex.exec(name.toLowerCase());
-	if (!match) {
-		throw new Error(`Invalid cell name: ${name}`);
-	}
-
-	const row = parseInt(match[1]) - 1;
-	const col = parseInt(match[2]) - 1;
-	return row * size + col;
+self.cellIndexFromAddress = function({row, column}, size) {
+	return row * size + column;
 }
 
 self.sequenceEqual = function(arr1, arr2) {

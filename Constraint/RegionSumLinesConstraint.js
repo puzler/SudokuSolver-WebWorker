@@ -1,6 +1,6 @@
 class RegionSumLinesConstraint extends Constraint {
     constructor(board, params) {
-        const cells = params.cells.map(cellName => cellIndexFromName(cellName, board.size));
+        const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         const specificName = `Region Sum Line at ${cellName(cells[0], board.size)}`;
         super(board, 'Region Sum Line', specificName);
 
@@ -164,4 +164,4 @@ class RegionSumLinesConstraint extends Constraint {
     }
 }
 
-registerConstraint('regionsumline', (board, params) => params.lines.map(line => new RegionSumLinesConstraint(board, { cells: line })));
+registerConstraint('regionSumLines', (board, params) => params.lines.map(line => new RegionSumLinesConstraint(board, { cells: line })));

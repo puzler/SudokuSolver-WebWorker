@@ -1,6 +1,6 @@
 class FixedSumConstraint extends Constraint {
     constructor(constraintName, specificName, board, params) {
-        const cells = params.cells.map(cellName => cellIndexFromName(cellName, board.size));
+        const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         super(board, constraintName, specificName);
 
         this.sum = params.sum;

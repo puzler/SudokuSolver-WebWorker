@@ -1,7 +1,7 @@
 class ArrowSumConstraint extends Constraint {
     constructor(board, params) {
-        const circleCells = params.circleCells.map(cellName => cellIndexFromName(cellName, board.size));
-        const arrowCells = params.arrowCells.map(cellName => cellIndexFromName(cellName, board.size));
+        const circleCells = params.circleCells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
+        const arrowCells = params.arrowCells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         const allCells = [...circleCells, ...arrowCells];
 
         const specificName = `Arrow at ${cellName(circleCells[0], board.size)}`;
@@ -428,7 +428,7 @@ class ArrowSumConstraint extends Constraint {
     }
 }
 
-registerConstraint('arrow', (board, params) => {
+registerConstraint('arrows', (board, params) => {
 	const constraints = [];
 	for (let line of params.lines) {
 		const arrowParams = {

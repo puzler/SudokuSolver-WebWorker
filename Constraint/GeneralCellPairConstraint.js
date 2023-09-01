@@ -1,6 +1,6 @@
 class GeneralCellPairConstraint extends Constraint {
     constructor(constraintName, specificName, constraintGroup, isPairAllowed, negativePairsGenerator, board, params) {
-        const cellPairs = params.cellsPairs.map(cells => cells.map(cellName => cellIndexFromName(cellName, board.size)).sort((a, b) => a - b));
+        const cellPairs = params.cellsPairs.map(cells => cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size)).sort((a, b) => a - b));
         super(board, constraintName, specificName);
 
         this.cellPairs = cellPairs;

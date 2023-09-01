@@ -1,25 +1,25 @@
 importScripts(
-    '/Solver/SolveUtility.js',
-    '/Solver/Board.js',
-    '/Solver/SumGroup.js',
-    '/Solver/SumCellsHelper.js',
-    '/Solver/ConstraintBuilder.js',
+    './SolveUtility.js',
+    './Board.js',
+    './SumGroup.js',
+    './SumCellsHelper.js',
+    './ConstraintBuilder.js',
 
     // Constraints
-    '/Solver/Constraint/Constraint.js',
-    '/Solver/Constraint/ArrowSumConstraint.js',
-    '/Solver/Constraint/FixedSumConstraint.js',
-    '/Solver/Constraint/GeneralCellPairConstraint.js',
-    '/Solver/Constraint/KillerCageConstraint.js',
-    '/Solver/Constraint/RegionSumLinesConstraint.js',
+    './Constraint/Constraint.js',
+    './Constraint/ArrowSumConstraint.js',
+    './Constraint/FixedSumConstraint.js',
+    './Constraint/GeneralCellPairConstraint.js',
+    './Constraint/KillerCageConstraint.js',
+    './Constraint/RegionSumLinesConstraint.js',
 
     // Logical Steps
-    '/Solver/LogicalStep/LogicalStep.js',
-    '/Solver/LogicalStep/CellForcing.js',
-    '/Solver/LogicalStep/ConstraintLogic.js',
-    '/Solver/LogicalStep/HiddenSingle.js',
-    '/Solver/LogicalStep/NakedSingle.js',
-    '/Solver/LogicalStep/NakedTupleAndPointing.js'
+    './LogicalStep/LogicalStep.js',
+    './LogicalStep/CellForcing.js',
+    './LogicalStep/ConstraintLogic.js',
+    './LogicalStep/HiddenSingle.js',
+    './LogicalStep/NakedSingle.js',
+    './LogicalStep/NakedTupleAndPointing.js'
 );
 
 let eventCanceled = false;
@@ -198,6 +198,7 @@ self.step = async function(data) {
 }
 
 self.logicalSolve = async function (data) {
+    console.log('in logical solve')
     const board = createBoard(data.board, true);
     if (!board) {
         self.postMessage({ result: 'logicalsolve', desc: ['Board is invalid!'], invalid: true, changed: false });
@@ -221,6 +222,7 @@ self.logicalSolve = async function (data) {
 
     const expandedCandidates = expandCandidates(board.cells, board.givenBit);
     self.postMessage({ result: 'logicalsolve', desc, candidates: expandedCandidates, invalid: solveResult.invalid, changed: solveResult.changed });
+    console.log('finished logical solve')
 };
 
 self.createBoard = function (boardData, keepPencilMarks = false) {
@@ -262,6 +264,8 @@ self.createBoard = function (boardData, keepPencilMarks = false) {
         const region = uniqueRegions.get(regionKey);
         if (region.length == size) {
             board.addRegion(`Region ${regionKey}`, region, 'region');
+        } else {
+            return null
         }
     }
 

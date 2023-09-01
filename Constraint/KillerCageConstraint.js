@@ -1,6 +1,6 @@
 class KillerCageConstraint extends Constraint {
     constructor(board, params) {
-        const cells = params.cells.map(cellName => cellIndexFromName(cellName, board.size));
+        const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         const specificName =
             params.value > 0
                 ? `Killer Cage ${params.value} at ${cellName(cells[0], board.size)}`
