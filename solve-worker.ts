@@ -1,34 +1,47 @@
-importScripts(
-    'SolveUtility.js',
-    'Board.js',
-    'SumGroup.js',
-    'SumCellsHelper.js',
-    'ConstraintBuilder.js',
+import JSONfn from 'json-fn'
+import Board from './board'
+import { buildConstraints } from './constraint-builder';
+import registerAllConstraints from './constraint-registry';
 
-    // Constraints
-    'Constraint/Constraint.js',
-    'Constraint/ArrowSumConstraint.js',
-    'Constraint/FixedSumConstraint.js',
-    'Constraint/GeneralCellPairConstraint.js',
-    'Constraint/KillerCageConstraint.js',
-    'Constraint/RegionSumLinesConstraint.js',
+import {
+    minValue,
+    valueBit,
+    valuesList,
+    valuesMask,
+} from './solve-utility'
 
-    // Logical Steps
-    'LogicalStep/LogicalStep.js',
-    'LogicalStep/CellForcing.js',
-    'LogicalStep/ConstraintLogic.js',
-    'LogicalStep/HiddenSingle.js',
-    'LogicalStep/NakedSingle.js',
-    'LogicalStep/NakedTupleAndPointing.js'
-);
+export type BoardDefinition = {
+    grid?: {
+        cells?: (boardData) => Array<Array<any>>,
+        givenPencilMarks?: ({ cell, row, column, boardData }) => undefined|null|Array<number>,
+        centerPencilMarks?: ({ cell, row, column, boardData }) => undefined|null|Array<number>,
+        value?: ({ cell, row, column, boardData }) => undefined|null|number
+    }
+    constraints?: {
+        arrow?: {
+            collector?: (boardData) => any,
+            circleCells?: (arrow) => Array<any>,
+            lines?: (arrow) => Array<any>,
+        }
+    }
+    indexForAddress?: (address, size) => number
+};
 
+registerAllConstraints()
 let eventCanceled = false;
+let boardDefinition = {} as BoardDefinition;
+const workerId = Math.floor(Math.random() * 100000)
 
-self.addEventListener(
+addEventListener(
     'message',
     async function (e) {
         const data = e.data;
+        console.log(workerId)
+
         switch (data.cmd) {
+            case 'define':
+                defineBoard(data);
+                break;
             case 'solve':
                 eventCanceled = false;
                 solve(data);
@@ -53,53 +66,75 @@ self.addEventListener(
                 eventCanceled = true;
                 break;
             default:
-                self.postMessage({ result: 'unknown command' });
+                postMessage({ result: 'unknown command' });
         }
     },
     false
 );
 
-self.solve = function(data) {
+export function cellIndexFromAddress(address, size) {
+    if (boardDefinition.indexForAddress) {
+        return boardDefinition.indexForAddress(address, size)
+    }
+
+	const regex = /r(\d+)c(\d+)/;
+	const match = regex.exec(address.toLowerCase());
+	if (!match) {
+		throw new Error(`Invalid cell address: ${address}`);
+	}
+
+	const row = parseInt(match[1]) - 1;
+	const col = parseInt(match[2]) - 1;
+	return row * size + col;
+}
+
+function defineBoard(data) {
+    if (data.definition) {
+        boardDefinition = JSONfn.parse(data.definition)
+    }
+}
+
+function solve(data) {
     const board = createBoard(data.board);
     if (!board) {
-        self.postMessage({ result: 'invalid' });
+        postMessage({ result: 'invalid' });
     } else {
         const solution = board.findSolution(data.options || {}, () => eventCanceled);
         if (solution) {
             if (solution.cancelled) {
-                self.postMessage({ result: 'cancelled' });
+                postMessage({ result: 'cancelled' });
             } else {
                 const solutionValues = solution.getValueArray();
-                self.postMessage({ result: 'solution', solution: solutionValues });
+                postMessage({ result: 'solution', solution: solutionValues });
             }
         } else {
-            self.postMessage({ result: 'no solution' });
+            postMessage({ result: 'no solution' });
         }
     }
 };
 
-self.countSolutions = async function(data) {
+async function countSolutions(data) {
     const board = createBoard(data.board);
     if (!board) {
-        self.postMessage({ result: 'invalid' });
+        postMessage({ result: 'invalid' });
     } else {
         const { maxSolutions = 0 } = data.options || {};
         const countResult = await board.countSolutions(
             maxSolutions,
             count => {
-                self.postMessage({ result: 'count', count: count, complete: false });
+                postMessage({ result: 'count', count: count, complete: false });
             },
             () => eventCanceled
         );
         if (countResult.isCancelled) {
-            self.postMessage({ result: 'count', count: countResult.numSolutions, complete: false, cancelled: true });
+            postMessage({ result: 'count', count: countResult.numSolutions, complete: false, cancelled: true });
         } else {
-            self.postMessage({ result: 'count', count: countResult.numSolutions, complete: true });
+            postMessage({ result: 'count', count: countResult.numSolutions, complete: true });
         }
     }
 };
 
-self.expandCandidates = function(candidates, givenBit) {
+function expandCandidates(candidates: any, givenBit?: any) {
     if (!givenBit) {
         return candidates?.map(mask => valuesList(mask));
     }
@@ -112,22 +147,22 @@ self.expandCandidates = function(candidates, givenBit) {
     });
 }
 
-self.trueCandidates = async function (data) {
+async function trueCandidates(data) {
     const board = createBoard(data.board);
     if (!board) {
-        self.postMessage({ result: 'invalid' });
+        postMessage({ result: 'invalid' });
     } else {
         const { maxSolutionsPerCandidate = 1 } = data.options || {};
 
         const trueCandidatesResult = await board.calcTrueCandidates(maxSolutionsPerCandidate, () => eventCanceled);
         if (trueCandidatesResult.invalid) {
-            self.postMessage({ result: 'invalid' });
+            postMessage({ result: 'invalid' });
         } else if (trueCandidatesResult.cancelled) {
-            self.postMessage({ result: 'cancelled' });
+            postMessage({ result: 'cancelled' });
         } else {
             const { candidates, counts } = trueCandidatesResult;
             const expandedCandidates = expandCandidates(candidates);
-            self.postMessage({ result: 'truecandidates', candidates: expandedCandidates, counts: counts });
+            postMessage({ result: 'truecandidates', candidates: expandedCandidates, counts: counts });
         }
     }
 };
@@ -135,23 +170,31 @@ self.trueCandidates = async function (data) {
 // Compares the initial candidates in the provided data with the final imported board.
 function candidatesDiffer(board, data) {
     const size = board.size;
+    const dataGrid = gridFor(data.board)
     for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
             const cellIndex = i * size + j;
             const cellMask = board.cells[cellIndex] & board.allValues;
-            const dataCell = data.board.grid[i][j];
+            const dataCell = dataGrid[i][j];
+
+            const cellDataParams = { cell: dataCell, row: i, column: j, boardData: data.board }
+            const cellValue  = valueFor(cellDataParams)
+
             let dataCellMask = board.allValues;
-            if (dataCell.value) {
-                dataCellMask = valueBit(dataCell.value);
+            if (cellValue) {
+                dataCellMask = valueBit(cellValue);
             } else {
-                const haveGivenPencilmarks = dataCell.givenPencilMarks?.length > 0;
-                const haveCenterPencilmarks = dataCell.centerPencilMarks?.length > 0;
+                const givenPencilMarks = givenMarksFor(cellDataParams)
+                const centerPencilMarks = centerMarksFor(cellDataParams)
+                const haveGivenPencilmarks = givenPencilMarks?.length > 0;
+                const haveCenterPencilmarks = centerPencilMarks?.length > 0;
+
                 if (haveGivenPencilmarks && haveCenterPencilmarks) {
-                    dataCellMask = valuesMask(dataCell.givenPencilMarks.filter(value => dataCell.centerPencilMarks.includes(value)));
+                    dataCellMask = valuesMask(givenPencilMarks.filter(value => centerPencilMarks.includes(value)));
                 } else if (haveGivenPencilmarks) {
-                    dataCellMask = valuesMask(dataCell.givenPencilMarks);
+                    dataCellMask = valuesMask(givenPencilMarks);
                 } else if (haveCenterPencilmarks) {
-                    dataCellMask = valuesMask(dataCell.centerPencilMarks);
+                    dataCellMask = valuesMask(centerPencilMarks);
                 }
             }
 
@@ -164,50 +207,49 @@ function candidatesDiffer(board, data) {
     return false;
 }
 
-self.step = async function(data) {
+async function step(data) {
     const board = createBoard(data.board, true);
     if (!board) {
-        self.postMessage({ result: 'step', desc: 'Board is invalid!', invalid: true, changed: false });
+        postMessage({ result: 'step', desc: 'Board is invalid!', invalid: true, changed: false });
         return;
     }
 
     if (candidatesDiffer(board, data)) {
         const expandedCandidates = expandCandidates(board.cells, board.givenBit);
-        self.postMessage({ result: 'step', desc: 'Initial Candidates', candidates: expandedCandidates, invalid: false, changed: true });
+        postMessage({ result: 'step', desc: 'Initial Candidates', candidates: expandedCandidates, invalid: false, changed: true });
         return;
     }
 
     // Perform a single step
     const stepResult = await board.logicalStep(() => eventCanceled);
     if (stepResult.cancelled) {
-        self.postMessage({ result: 'cancelled' });
+        postMessage({ result: 'cancelled' });
         return;
     }
 
     if (stepResult.unchanged) {
         if (board.nonGivenCount === 0) {
-            self.postMessage({ result: 'step', desc: 'Solved!' });
+            postMessage({ result: 'step', desc: 'Solved!' });
         } else {
-            self.postMessage({ result: 'step', desc: 'No logical steps found.' });
+            postMessage({ result: 'step', desc: 'No logical steps found.' });
         }
         return;
     }
 
     const expandedCandidates = expandCandidates(board.cells, board.givenBit);
-    self.postMessage({ result: 'step', desc: stepResult.desc, candidates: expandedCandidates, invalid: stepResult.invalid, changed: stepResult.changed });
+    postMessage({ result: 'step', desc: stepResult.desc, candidates: expandedCandidates, invalid: stepResult.invalid, changed: stepResult.changed });
 }
 
-self.logicalSolve = async function (data) {
-    console.log('in logical solve')
+async function logicalSolve(data) {
     const board = createBoard(data.board, true);
     if (!board) {
-        self.postMessage({ result: 'logicalsolve', desc: ['Board is invalid!'], invalid: true, changed: false });
+        postMessage({ result: 'logicalsolve', desc: ['Board is invalid!'], invalid: true, changed: false });
         return;
     }
 
     const solveResult = await board.logicalSolve(() => eventCanceled);
     if (solveResult.cancelled) {
-        self.postMessage({ result: 'cancelled' });
+        postMessage({ result: 'cancelled' });
         return;
     }
 
@@ -221,16 +263,49 @@ self.logicalSolve = async function (data) {
     }
 
     const expandedCandidates = expandCandidates(board.cells, board.givenBit);
-    self.postMessage({ result: 'logicalsolve', desc, candidates: expandedCandidates, invalid: solveResult.invalid, changed: solveResult.changed });
-    console.log('finished logical solve')
+    postMessage({ result: 'logicalsolve', desc, candidates: expandedCandidates, invalid: solveResult.invalid, changed: solveResult.changed });
 };
 
-self.createBoard = function (boardData, keepPencilMarks = false) {
+function gridFor(boardData) {
+    if (boardDefinition.grid?.cells) {
+        const grid = boardDefinition.grid.cells(boardData)
+        return grid
+    }
+
+    return boardData.grid
+}
+
+function givenMarksFor(cellParams) {
+    if (boardDefinition.grid?.givenPencilMarks) {
+        return boardDefinition.grid.givenPencilMarks(cellParams)
+    }
+
+    return cellParams.cell.givenPencilMarks
+}
+
+function centerMarksFor(cellParams) {
+    if (boardDefinition.grid?.centerPencilMarks) {
+        return boardDefinition.grid.centerPencilMarks(cellParams)
+    }
+
+    return cellParams.cell.centerPencilMarks
+}
+
+function valueFor(cellParams) {
+    if (boardDefinition.grid?.value) {
+        return boardDefinition.grid.value(cellParams)
+    }
+
+    return cellParams.cell.value
+}
+
+function createBoard(boardData, keepPencilMarks = false) {
     const size = boardData.size;
     const board = new Board(size);
+    const boardGrid = gridFor(boardData)
 
     // Apply default regions
-    applyDefaultRegions(boardData);
+    applyDefaultRegions(boardGrid, size);
 
     // Add regions
 
@@ -250,7 +325,7 @@ self.createBoard = function (boardData, keepPencilMarks = false) {
     const uniqueRegions = new Map();
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
-            const region = boardData.grid[row][col].region;
+            const region = boardGrid[row][col].region;
             if (region >= 0) {
                 const regionKey = (region + 1).toString();
                 if (!uniqueRegions.has(regionKey)) {
@@ -281,7 +356,7 @@ self.createBoard = function (boardData, keepPencilMarks = false) {
     }
 
     // Add constraints
-    if (!buildConstraints(boardData, board)) {
+    if (!buildConstraints(boardData, board, boardDefinition)) {
         return null;
     }
 
@@ -290,36 +365,43 @@ self.createBoard = function (boardData, keepPencilMarks = false) {
     // Set the givens
     for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
-            const srcCell = boardData.grid[i][j];
-            const haveGivenPencilmarks = srcCell.givenPencilMarks?.length > 0;
-            const haveCenterPencilmarks = srcCell.centerPencilMarks?.length > 0;
+            const srcCell = boardGrid[i][j];
+            const cellDataParam = { cell: srcCell, row: i, column: j, boardData }
+
+            const givenPencilMarks = givenMarksFor(cellDataParam)
+            const centerPencilMarks = centerMarksFor(cellDataParam)
+            const cellValue = valueFor(cellDataParam)
+
+            const haveGivenPencilmarks = givenPencilMarks?.length > 0
+            const haveCenterPencilmarks = centerPencilMarks?.length > 0
+
             const cellIndex = board.cellIndex(i, j);
             if (keepPencilMarks) {
-                if (srcCell.value) {
-                    if (!board.setAsGiven(cellIndex, srcCell.value)) {
+                if (cellValue) {
+                    if (!board.setAsGiven(cellIndex, cellValue)) {
                         return null;
                     }
                 } else if (haveGivenPencilmarks && haveCenterPencilmarks) {
-                    const pencilMarks = srcCell.givenPencilMarks.filter(value => srcCell.centerPencilMarks.includes(value));
+                    const pencilMarks = givenPencilMarks.filter(value => centerPencilMarks.includes(value));
                     if (!board.applyGivenPencilMarks(cellIndex, pencilMarks)) {
                         return null;
                     }
                 } else if (haveGivenPencilmarks) {
-                    if (!board.applyGivenPencilMarks(cellIndex, srcCell.givenPencilMarks)) {
+                    if (!board.applyGivenPencilMarks(cellIndex, givenPencilMarks)) {
                         return null;
                     }
                 } else if (haveCenterPencilmarks) {
-                    if (!board.applyGivenPencilMarks(cellIndex, srcCell.centerPencilMarks)) {
+                    if (!board.applyGivenPencilMarks(cellIndex, centerPencilMarks)) {
                         return null;
                     }
                 }
             } else {
                  if (srcCell.given) {
-                     if (!board.setAsGiven(cellIndex, srcCell.value)) {
+                     if (!board.setAsGiven(cellIndex, cellValue)) {
                          return null;
                      }
                  } else if (haveGivenPencilmarks) {
-                     if (!board.applyGivenPencilMarks(cellIndex, srcCell.givenPencilMarks)) {
+                     if (!board.applyGivenPencilMarks(cellIndex, givenPencilMarks)) {
                          return null;
                      }
                  }
@@ -328,7 +410,7 @@ self.createBoard = function (boardData, keepPencilMarks = false) {
     }
 
     // Clean up any naked singles which are alreay set as given
-    const newNakedSingles = [];
+    const newNakedSingles = [] as Array<any>;
     for (const cellIndex of board.nakedSingles) {
         if (!board.isGiven(cellIndex)) {
             newNakedSingles.push(cellIndex);
@@ -339,10 +421,8 @@ self.createBoard = function (boardData, keepPencilMarks = false) {
     return board;
 };
 
-self.applyDefaultRegions = function (boardData) {
-    const size = boardData.size;
-
-    const regionSizes = {};
+function applyDefaultRegions(boardGrid, size) {
+    const regionSizes = {} as { w?: number; h?: number };
     for (let h = 1; h * h <= size; h++) {
         if (size % h === 0) {
             regionSizes.w = size / h;
@@ -352,9 +432,9 @@ self.applyDefaultRegions = function (boardData) {
 
     for (let row = 0; row < size; row++) {
         for (let col = 0; col < size; col++) {
-			const cell = boardData.grid[row][col];
+			const cell = boardGrid[row][col];
 			if (cell.region === undefined) {
-				cell.region = Math.floor(row / regionSizes.h) * regionSizes.h + Math.floor(col / regionSizes.w);
+				cell.region = Math.floor(row / regionSizes.h!) * regionSizes.h! + Math.floor(col / regionSizes.w!);
 			}
 		}
     }

@@ -1,11 +1,11 @@
 // Reflects what has happened to the board
-self.LogicalStepResult = Object.freeze({
+export const LogicalStepResult = Object.freeze({
     UNCHANGED: 0,
     CHANGED: 1,
     INVALID: 2,
 });
 
-class LogicalStep {
+export default class LogicalStep {
     constructor(board, name) {
         this.name = name;
 
@@ -27,12 +27,30 @@ class LogicalStep {
         this.maskBetweenExclusive = board.maskBetweenExclusive;
     }
 
+    name: string
+    constraintName?: string
+    size: number
+    allValues: any
+    givenBit: any
+    cellIndex: any
+    cellCoords: any
+    candidateIndexRC: any
+    candidateIndex: any
+    cellIndexFromCandidate: any
+    valueFromCandidate: any
+    maskStrictlyLower: any
+    maskStrictlyHigher: any
+    maskLowerOrEqual: any
+    maskHigherOrEqual: any
+    maskBetweenInclusive: any
+    maskBetweenExclusive: any
+
     // Returns the name of the logical step
     toString() {
         return this.constraintName;
     }
 
-	step(board, desc) {
+	step(board, desc): 0|1|2 {
 		return LogicalStepResult.UNCHANGED;
 	}
 }

@@ -1,4 +1,12 @@
-class CellForcing extends LogicalStep {
+import {
+	popcount,
+	valuesList,
+	maskToString,
+	cellName,
+} from "../solve-utility";
+import LogicalStep from "./logical-step";
+
+export default class CellForcing extends LogicalStep {
     constructor(board) {
         super(board, 'Cell Forcing');
     }

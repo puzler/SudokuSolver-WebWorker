@@ -1,4 +1,10 @@
-class KillerCageConstraint extends Constraint {
+import { registerConstraint } from "../constraint-builder";
+import { cellName, valueBit, hasValue } from "../solve-utility";
+import { cellIndexFromAddress } from "../solve-worker";
+import SumCellsHelper from "../sum-cells-helper";
+import Constraint, { ConstraintResult } from "./constraint";
+
+export default class KillerCageConstraint extends Constraint {
     constructor(board, params) {
         const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         const specificName =
@@ -16,6 +22,11 @@ class KillerCageConstraint extends Constraint {
         this.cells = cells.sort((a, b) => a - b);
         this.cellsSet = new Set(this.cells);
     }
+
+    sum: number
+    cells: any
+    cellsSet: any
+    sumCells: any
 
     init(board, isRepeat) {
         // Size 1 killer cages are givens
@@ -134,4 +145,6 @@ class KillerCageConstraint extends Constraint {
     }
 }
 
-registerConstraint('killercage', (board, params) => new KillerCageConstraint(board, params));
+export function register() {
+    registerConstraint('killercage', (board, params) => new KillerCageConstraint(board, params));
+}

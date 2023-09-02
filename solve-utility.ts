@@ -1,5 +1,5 @@
 // Count the number of set bits in an integer
-self.popcount = function(x) {
+export function popcount(x) {
     x -= (x >> 1) & 0x55555555;
     x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
     x = (x + (x >> 4)) & 0x0f0f0f0f;
@@ -9,37 +9,37 @@ self.popcount = function(x) {
 }
 
 // Count the number of trailing zeros in an integer
-self.ctz  = function(x) {
+export function ctz(x) {
     return popcount((x & -x) - 1);
 }
 
 // Computes the bitmask with all values set
-self.allValues = function(size) {
+export function allValues(size) {
 	return (1 << size) - 1;
 }
 
 // Computes the bitmask with a specific value set
-self.valueBit = function(value) {
+export function valueBit(value) {
 	return 1 << (value - 1);
 }
 
 // Get the value of the first set bit
-self.minValue = function(bits) {
+export function minValue(bits) {
 	return ctz(bits) + 1;
 }
 
 // Get the value of the last set bit
-self.maxValue = function(bits) {
+export function maxValue(bits) {
 	return 32 - Math.clz32(bits);
 }
 
 // Get if a value is set
-self.hasValue = function(bits, value) {
+export function hasValue(bits, value) {
 	return (bits & valueBit(value)) !== 0;
 }
 
 // Get the value of a randomly set bit
-self.randomValue = function(bits) {
+export function randomValue(bits) {
 	if (bits === 0) {
 		return 0;
 	}
@@ -58,12 +58,12 @@ self.randomValue = function(bits) {
 	return 0;
 }
 
-self.valuesMask = function(values) {
+export function valuesMask(values) {
 	return values.reduce((mask, value) => mask | valueBit(value), 0);
 }
 
-self.valuesList = function(mask) {
-	const values = [];
+export function valuesList(mask) {
+	const values = [] as Array<number>;
 	while (mask !== 0) {
 		const value = minValue(mask);
 		values.push(value);
@@ -72,7 +72,7 @@ self.valuesList = function(mask) {
 	return values;
 }
 
-self.binomialCoefficient = function(n, k) {
+export function binomialCoefficient(n, k) {
 	if (k < 0 || k > n) {
 		return 0;
 	}
@@ -92,7 +92,7 @@ self.binomialCoefficient = function(n, k) {
 	return result;
 }
 
-self.combinations = function* (array, size) {
+export function* combinations(array, size) {
     function* combine(start, prefix) {
         if (prefix.length === size) {
             yield prefix;
@@ -105,7 +105,7 @@ self.combinations = function* (array, size) {
     yield* combine(0, []);
 };
 
-self.permutations = function* (array) {
+export function* permutations(array) {
     function* permute(list, i) {
         if (i + 1 === list.length) {
             yield list;
@@ -121,23 +121,23 @@ self.permutations = function* (array) {
 };
 
 // Helper for memo keys
-self.cellsKey = function(prefix, cells, size) {
+export function cellsKey(prefix, cells, size) {
 	return prefix + appendCellNames(cells, size);
 }
 
-self.appendInts = function(ints) {
+export function appendInts(ints) {
 	return ints.map(i => '|' + i).join('');
 }
 
-self.appendCellNames = function(cells, size) {
+export function appendCellNames(cells, size) {
 	return cells.map(cell => '|' + cellName(cell, size)).join('');
 }
 
-self.maskToString = function(mask, size) {
+export function maskToString(mask, size) {
 	return valuesList(mask).join(size >= 10 ? ',' : '');
 }
 
-self.appendCellValueKey = function(board, cells) {
+export function appendCellValueKey(board, cells) {
 	let builder = '';
 	cells.forEach(cellIndex => {
 		const mask = board.cells[cellIndex];
@@ -146,17 +146,13 @@ self.appendCellValueKey = function(board, cells) {
 	return builder;
 }
 
-self.cellName = function (cellIndex, size) {
+export function cellName (cellIndex, size) {
     const row = Math.floor(cellIndex / size);
     const col = cellIndex % size;
     return `R${row + 1}C${col + 1}`;
 };
 
-self.cellIndexFromAddress = function({row, column}, size) {
-	return row * size + column;
-}
-
-self.sequenceEqual = function(arr1, arr2) {
+export function sequenceEqual(arr1, arr2) {
     if (arr1.length !== arr2.length) {
         return false;
     }
@@ -165,7 +161,7 @@ self.sequenceEqual = function(arr1, arr2) {
 }
 
 // Assumes arr is sorted
-self.removeDuplicates = function(arr) {
+export function removeDuplicates(arr) {
     if (!arr.length) {
         return arr;
     }

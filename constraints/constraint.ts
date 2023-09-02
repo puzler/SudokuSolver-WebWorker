@@ -1,11 +1,11 @@
 // Reflects what has happened to the board
-self.ConstraintResult = Object.freeze({
+export const ConstraintResult = Object.freeze({
 	UNCHANGED: 0,
 	CHANGED: 1,
 	INVALID: 2,
 });
 
-class Constraint {
+export default class Constraint {
     // The constraintName is a string that is used to identify the constraint
     // The specificName is a string that is specific to this constraint instance
     constructor(board, constraintName, specificName) {
@@ -30,6 +30,24 @@ class Constraint {
         this.maskBetweenExclusive = board.maskBetweenExclusive;
     }
 
+    constraintName: string
+    specificName: string
+    size: number
+    allValues: any
+    givenBit: any
+    cellIndex: any
+    cellCoords: any
+    candidateIndexRC: any
+    candidateIndex: any
+    cellIndexFromCandidate: any
+    valueFromCandidate: any
+    maskStrictlyLower: any
+    maskStrictlyHigher: any
+    maskLowerOrEqual: any
+    maskHigherOrEqual: any
+    maskBetweenInclusive: any
+    maskBetweenExclusive: any
+
     // Returns the name of the constraint
     toString() {
         return this.constraintName;
@@ -48,7 +66,7 @@ class Constraint {
     //  - isRepeat is true if this is not the first time init has been called on this constraint
 	// Never call board.setAsGiven from init as not all weak links have been added yet, so they may not be respected.
 	//  - Instead, use board.keepCellMask(cell, valueBit(value)) so that it will be a naked single at the appropriate time.
-    init(board, isRepeat) {
+    init(board, isRepeat): 0|1|2 {
         return ConstraintResult.UNCHANGED;
     }
 
@@ -62,7 +80,7 @@ class Constraint {
     // logicalStepDescription is an optional array of strings that will be filled with a description of the logic step
 	// This is used to report the logic step to the user
     // Returns a ConstraintResult
-    logicStep(board, logicalStepDescription) {
+    logicStep(board, logicalStepDescription): 0|1|2 {
         return ConstraintResult.UNCHANGED;
     }
 
@@ -93,5 +111,3 @@ class Constraint {
         return [Math.abs(row2 - row1), Math.abs(col2 - col1)];
     }
 }
-
-self.Constraint = Constraint;

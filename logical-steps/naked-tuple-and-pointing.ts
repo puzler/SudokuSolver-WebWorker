@@ -1,4 +1,14 @@
-class NakedTupleAndPointing extends LogicalStep {
+import { LogicResult } from "../board";
+import {
+	popcount,
+	combinations,
+	maskToString,
+	valuesList,
+	valueBit,
+} from "../solve-utility";
+import LogicalStep from "./logical-step";
+
+export default class NakedTupleAndPointing extends LogicalStep {
     constructor(board) {
         super(board, 'Naked Tuple and Pointing');
     }
@@ -56,7 +66,7 @@ class NakedTupleAndPointing extends LogicalStep {
                     for (let value of valuesList(tupleMask)) {
                         // Generate the list of candidate indexes in the tuple
                         const valueMask = valueBit(value);
-                        const tupleCandidates = [];
+                        const tupleCandidates = [] as Array<any>;
                         for (const { cellIndex, cellMask } of tupleCells) {
                             if ((cellMask & valueMask) !== 0) {
                                 tupleCandidates.push(board.candidateIndex(cellIndex, value));

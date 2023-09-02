@@ -1,4 +1,25 @@
-self.LogicResult = Object.freeze({
+import { ConstraintResult } from "./constraints/constraint";
+import CellForcing from "./logical-steps/cell-forcing";
+import ConstraintLogic from "./logical-steps/constraint-logic";
+import HiddenSingle from "./logical-steps/hidden-single";
+import NakedSingle from "./logical-steps/naked-single";
+import NakedTupleAndPointing from "./logical-steps/naked-tuple-and-pointing";
+import {
+    allValues,
+    sequenceEqual,
+    popcount,
+    valueBit,
+    minValue,
+    combinations,
+    hasValue,
+    valuesMask,
+    permutations,
+    maskToString,
+    cellName,
+    randomValue,
+} from "./solve-utility";
+
+export const LogicResult = Object.freeze({
     UNCHANGED: 0,
     CHANGED: 1,
     INVALID: 2,
@@ -23,9 +44,22 @@ class Board {
             new HiddenSingle(this),
             new ConstraintLogic(this),
             new CellForcing(this),
-            new NakedTupleAndPointing(this)
+            new NakedTupleAndPointing(this),
         ];
     }
+
+    size: number
+    allValues: any
+    givenBit: number
+    cells: any
+    nonGivenCount: any
+    nakedSingles: any
+    weakLinks: any
+    regions: any
+    constraints: any
+    constraintsFinalized: boolean
+    memos: any
+    logicalSteps: any
 
     clone() {
         // Shallow copy everything
@@ -331,7 +365,7 @@ class Board {
     }
 
     splitIntoGroups(cells) {
-        const groups = [];
+        const groups = [] as Array<any>;
 
         if (cells.length === 0) {
             return groups;
@@ -534,7 +568,7 @@ class Board {
             colsPerRow[i].sort((a, b) => a - b);
         }
 
-        let groups = [];
+        let groups = [] as Array<string>;
         for (let i = 0; i < this.size; i++) {
             if (colsPerRow[i].length === 0) {
                 continue;
@@ -581,13 +615,13 @@ class Board {
             return `-${this.valueNames(elimMask)}${cellName(cellIndex, this.size)}`;
         }
 
-        const elimsByVal = Array.from({ length: this.size }, () => []);
+        const elimsByVal = Array.from({ length: this.size }, () => [] as Array<number>);
         for (let elim of elims) {
             const [cellIndex, value] = this.candidateToIndexAndValue(elim);
             elimsByVal[value - 1].push(cellIndex);
         }
 
-        let elimDescs = [];
+        let elimDescs = [] as Array<string>;
         for (let value = 1; value <= this.size; value++) {
             const elimCells = elimsByVal[value - 1];
             if (elimCells.length > 0) {
@@ -638,7 +672,7 @@ class Board {
 
         // Check for "cell forcing" eliminations that originate from the given cells
         for (let cell of cells) {
-            let elimSet = null;
+            let elimSet = null as null|Set<any>;
             let cellMask = this.cells[cell];
             while (cellMask !== 0) {
                 const value = minValue(cellMask);
@@ -653,7 +687,7 @@ class Board {
                     }
                 } else {
                     // Interesection of the weak links for this candidate and the previous candidates
-                    const toDelete = [];
+                    const toDelete = [] as Array<any>;
                     for (let elimCandidate of elimSet) {
                         if (!weakLinks.has(elimCandidate)) {
                             toDelete.push(elimCandidate);
@@ -825,7 +859,7 @@ class Board {
     findUnassignedLocation(ignoreMasks = null) {
         const { size, givenBit, cells } = this;
         let minCandidates = size + 1;
-        let minCandidateIndex = null;
+        let minCandidateIndex = null as null|number;
 
         const totalCells = size * size;
         for (let cellIndex = 0; cellIndex < totalCells; cellIndex++) {
@@ -915,7 +949,13 @@ class Board {
         return null; // No solution found
     }
 
-    async countSolutions(maxSolutions, reportProgress, isCancelled, solutionsSeen, solutionEvent) {
+    async countSolutions(
+        maxSolutions: number,
+        reportProgress?: (count: number) => void,
+        isCancelled?: () => boolean,
+        solutionsSeen?: any,
+        solutionEvent?: any,
+    ) {
         const jobStack = [this.clone()];
         let numSolutions = 0;
         let lastReportTime = Date.now();
@@ -927,7 +967,7 @@ class Board {
                 await new Promise(resolve => setTimeout(resolve, 0));
 
                 // Check if the job was cancelled
-                if (isCancelled()) {
+                if (isCancelled && isCancelled()) {
                     return { numSolutions, isCancelled: true };
                 }
 
@@ -1011,7 +1051,13 @@ class Board {
         return { numSolutions, isCancelled: false };
     }
 
-    async calcTrueCandidates(maxSolutionsPerCandidate, isCancelled) {
+    async calcTrueCandidates(maxSolutionsPerCandidate, isCancelled): Promise<{
+        invalid?: boolean
+        cancelled?: boolean
+        isCancelled?: boolean
+        counts?: any
+        candidates?: any
+    }> {
         const { size, allValues } = this;
         const totalCells = size * size;
         const totalCandidates = totalCells * size;
@@ -1084,33 +1130,33 @@ class Board {
                 if (wantSolutionCounts) {
                     // Determine how many solutions we still need to find for this candidate
                     const candidateIndex = board.candidateIndex(cellIndex, chosenValue);
-                    const remainingSolutions = maxSolutionsPerCandidate - candidateCounts[candidateIndex];
+                    const remainingSolutions = maxSolutionsPerCandidate - candidateCounts![candidateIndex];
                     if (remainingSolutions <= 0) {
                         // We've already found enough solutions for this candidate
                         continue;
                     }
 
                     // Find solutions for the new board
-                    const { isCancelled } = await newBoard.countSolutions(remainingSolutions, null, isCancelled, solutionsSeen, solutionBoard => {
+                    const cancelled = await newBoard.countSolutions(remainingSolutions, null, isCancelled, solutionsSeen, solutionBoard => {
                         // Update all candidate counts for this solution
                         for (let cellIndex = 0; cellIndex < totalCells; cellIndex++) {
                             const cellMask = solutionBoard.cells[cellIndex] & allValues;
                             const cellValue = minValue(cellMask);
                             const cellCandidateIndex = solutionBoard.candidateIndex(cellIndex, cellValue);
-                            candidateCounts[cellCandidateIndex]++;
+                            candidateCounts![cellCandidateIndex]++;
 
-                            if (candidateCounts[cellCandidateIndex] >= maxSolutionsPerCandidate) {
+                            if (candidateCounts![cellCandidateIndex] >= maxSolutionsPerCandidate) {
                                 // We've found enough solutions for this candidate, so mark it as attempted
                                 attemptedCandidates[cellIndex] |= cellMask;
                             }
                         }
-                    });
+                    }).isCancelled;
 
-                    if (isCancelled) {
+                    if (cancelled) {
                         return { isCancelled: true };
                     }
 
-                    if (candidateCounts[candidateIndex] === 0) {
+                    if (candidateCounts![candidateIndex] === 0) {
                         // This candidate is impossible
                         board.clearCellMask(cellIndex, chosenValueMask);
                         removedCandidates = true;
@@ -1177,7 +1223,7 @@ class Board {
     }
 
     async logicalSolve(isCancelled) {
-        const desc = [];
+        const desc = [] as Array<string>;
         let lastCancelCheckTime = Date.now();
         let changed = false;
         while (true) {
@@ -1213,4 +1259,4 @@ class Board {
     }
 }
 
-self.Board = Board;
+export default Board

@@ -1,4 +1,10 @@
-class FixedSumConstraint extends Constraint {
+import { registerConstraint } from "../constraint-builder";
+import { valueBit, hasValue } from "../solve-utility";
+import { cellIndexFromAddress } from "../solve-worker";
+import SumCellsHelper from "../sum-cells-helper";
+import Constraint, { ConstraintResult } from "./constraint";
+
+export default class FixedSumConstraint extends Constraint {
     constructor(constraintName, specificName, board, params) {
         const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         super(board, constraintName, specificName);
@@ -7,6 +13,11 @@ class FixedSumConstraint extends Constraint {
         this.cells = cells.sort((a, b) => a - b);
         this.cellsSet = new Set(this.cells);
     }
+
+    sum: any
+    cells: any
+    cellsSet: any
+    sumHelper: any
 
     init(board, isRepeat) {
         // Size 1 is just a given
@@ -112,17 +123,19 @@ class FixedSumConstraint extends Constraint {
     }
 }
 
-registerConstraint('littlekillersum', (board, params) => {
-	if (!params.value) {
-		return [];
-	}
+export function register() {
+    registerConstraint('littlekillersum', (board, params) => {
+        if (!params.value) {
+            return [];
+        }
 
-	const clueCell = params.cell;
-	const lkParams = {
-		cells: params.cells,
-		sum: parseInt(params.value, 10),
-	};
-	const constraintName = 'Little Killer';
-	const specificName = `Little Killer ${params.value} at ${clueCell}`;
-	return new FixedSumConstraint(constraintName, specificName, board, lkParams);
-});
+        const clueCell = params.cell;
+        const lkParams = {
+            cells: params.cells,
+            sum: parseInt(params.value, 10),
+        };
+        const constraintName = 'Little Killer';
+        const specificName = `Little Killer ${params.value} at ${clueCell}`;
+        return new FixedSumConstraint(constraintName, specificName, board, lkParams);
+    });
+}

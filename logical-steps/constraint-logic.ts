@@ -1,4 +1,6 @@
-class ConstraintLogic extends LogicalStep {
+import LogicalStep, { LogicalStepResult } from "./logical-step";
+
+export default class ConstraintLogic extends LogicalStep {
     constructor(board) {
         super(board, 'Constraint Logic');
     }

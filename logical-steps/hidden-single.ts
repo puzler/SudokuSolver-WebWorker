@@ -1,4 +1,8 @@
-class HiddenSingle extends LogicalStep {
+import { LogicResult } from "../board";
+import { maskToString, minValue, cellName } from "../solve-utility";
+import LogicalStep from "./logical-step";
+
+export default class HiddenSingle extends LogicalStep {
 	constructor(board) {
 		super(board, 'Hidden Single');
 	}

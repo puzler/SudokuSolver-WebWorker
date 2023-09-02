@@ -1,3 +1,9 @@
+import { registerConstraint } from "../constraint-builder";
+import { cellName, minValue, valueBit } from "../solve-utility";
+import { cellIndexFromAddress } from "../solve-worker";
+import SumGroup from "../sum-group";
+import Constraint, { ConstraintResult } from "./constraint";
+
 class RegionSumLinesConstraint extends Constraint {
     constructor(board, params) {
         const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
@@ -8,11 +14,16 @@ class RegionSumLinesConstraint extends Constraint {
         this.cellsSet = new Set(this.cells);
     }
 
+    cells: any
+    cellsSet: any
+    segments: Array<any>
+    sumGroups: Array<any>
+
     init(board, isRepeat) {
         if (!isRepeat) {
             // Split cells into segments
             this.segments = [];
-            let currentSegment = [];
+            let currentSegment = [] as Array<any>;
             let currentRegion = null;
             for (const cell of this.cells) {
                 const cellRegions = board.getRegionsForCell(cell, 'region');
@@ -119,14 +130,14 @@ class RegionSumLinesConstraint extends Constraint {
 		}
 
 		if (changed && logicalStepDescription) {
-			const elims = [];
+			const elims = [] as Array<any>;
 			for (let i = 0; i < this.cells.length; i++) {
 				const cell = this.cells[i];
-				const origMask = origMasks[i];
+				const origMask = origMasks![i];
 				const newMask = board.cells[cell];
 				let removedMask = origMask & ~newMask;
 				while (removedMask !== 0) {
-					const value = lowestBit(removedMask);
+					const value = minValue(removedMask);
 					removedMask &= ~valueBit(value);
 
 					const candidate = board.candidateIndex(cell, value);
@@ -143,7 +154,7 @@ class RegionSumLinesConstraint extends Constraint {
 	}
 
     possibleSums(board) {
-        let sums = null;
+        let sums = null as null|Set<any>;
         for (const sumGroup of this.sumGroups) {
             const possibleSums = sumGroup.possibleSums(board);
             if (possibleSums.length === 0) {
@@ -153,7 +164,7 @@ class RegionSumLinesConstraint extends Constraint {
             if (sums === null) {
                 sums = new Set(possibleSums);
             } else {
-				sums = new Set(possibleSums.filter(x => sums.has(x)));
+				sums = new Set(possibleSums.filter(x => sums!.has(x)));
             }
         }
 
@@ -164,4 +175,6 @@ class RegionSumLinesConstraint extends Constraint {
     }
 }
 
-registerConstraint('regionSumLines', (board, params) => params.lines.map(line => new RegionSumLinesConstraint(board, { cells: line })));
+export function register() {
+    registerConstraint('regionSumLines', (board, params) => params.lines.map(line => new RegionSumLinesConstraint(board, { cells: line })));
+}

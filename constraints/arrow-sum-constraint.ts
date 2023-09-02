@@ -1,4 +1,17 @@
-class ArrowSumConstraint extends Constraint {
+import Board from "../board";
+import { registerConstraint } from "../constraint-builder";
+import {
+    cellName,
+    valueBit,
+    minValue,
+    valuesList,
+    removeDuplicates,
+} from "../solve-utility";
+import { cellIndexFromAddress } from "../solve-worker";
+import SumCellsHelper from "../sum-cells-helper";
+import Constraint, { ConstraintResult } from "./constraint";
+
+export default class ArrowSumConstraint extends Constraint {
     constructor(board, params) {
         const circleCells = params.circleCells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         const arrowCells = params.arrowCells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
@@ -15,6 +28,12 @@ class ArrowSumConstraint extends Constraint {
         this.allCells = allCells;
         this.allCellsSet = new Set(allCells);
     }
+
+    circleCells: any
+    arrowCellsSum: any
+    arrowCells: any
+    allCells: any
+    allCellsSet: any
 
     init(board, isRepeat) {
         if (this.arrowCells.length === 1 && this.circleCells.length === 1) {
@@ -288,8 +307,8 @@ class ArrowSumConstraint extends Constraint {
 		return ConstraintResult.UNCHANGED;
 	}
 
-	logicStepPill(board, logicalStepDescription) {
-		const circleCellGiven = board.isGiven(this.circleCell);
+	logicStepPill(board: Board, logicalStepDescription) {
+		const circleCellGiven = this.circleCells.every(cell => board.isGiven(cell));
         const arrowCellsGiven = this.arrowCells.every(cell => board.isGiven(cell));
         if (circleCellGiven && arrowCellsGiven) {
             // Done: enforce should have already verified the sum.
@@ -331,7 +350,7 @@ class ArrowSumConstraint extends Constraint {
 			}
 
 			let changed = false;
-			const elims = [];
+			const elims = [] as Array<number>;
 			for (let i = 0; i < this.circleCells.length; i++) {
 				const circleCell = this.circleCells[i];
 				const originalMask = board.cells[circleCell] & board.allValues;
@@ -370,7 +389,7 @@ class ArrowSumConstraint extends Constraint {
 			return [sumPrefix];
 		}
 
-		const sums = [];
+		const sums = [] as Array<string>;
 		const circleCell = this.circleCells[circleIndex];
 		let circleCellMask = board.cells[circleCell] & board.allValues;
 		while (circleCellMask !== 0) {
@@ -385,7 +404,7 @@ class ArrowSumConstraint extends Constraint {
 		return sums;
 	}
 
-	getPillValuesForSum(board, sumStr, circleIndex = 0, sumValues = []) {
+	getPillValuesForSum(board, sumStr, circleIndex = 0, sumValues = [] as Array<number>) {
 		if (circleIndex >= this.circleCells.length) {
 			if (sumStr === sumValues.join('')) {
 				return [sumValues];
@@ -393,7 +412,7 @@ class ArrowSumConstraint extends Constraint {
 			return [];
 		}
 
-		const sums = [];
+		const sums = [] as Array<Array<number>>;
 		const circleCell = this.circleCells[circleIndex];
 		let circleCellMask = board.cells[circleCell] & board.allValues;
 		while (circleCellMask !== 0) {
@@ -428,14 +447,19 @@ class ArrowSumConstraint extends Constraint {
     }
 }
 
-registerConstraint('arrows', (board, params) => {
-	const constraints = [];
-	for (let line of params.lines) {
-		const arrowParams = {
-			circleCells: params.cells,
-			arrowCells: line.slice(1),
-		};
-		constraints.push(new ArrowSumConstraint(board, arrowParams));
-	}
-	return constraints;
-});
+export function register() {
+    registerConstraint('arrow', (board, params, definition) => {
+        const constraints = [] as Array<ArrowSumConstraint>;
+        const lines = definition?.lines ? definition.lines(params) : params.lines
+        const circleCells = definition?.circleCells ? definition.circleCells(params) : params.cells
+
+        for (let line of lines) {
+            const arrowParams = {
+                circleCells,
+                arrowCells: line.slice(1),
+            };
+            constraints.push(new ArrowSumConstraint(board, arrowParams));
+        }
+        return constraints;
+    })
+}

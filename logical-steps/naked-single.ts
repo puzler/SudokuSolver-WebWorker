@@ -1,4 +1,7 @@
-class NakedSingle extends LogicalStep {
+import LogicalStep, { LogicalStepResult } from "./logical-step";
+import { minValue, cellName } from "../solve-utility";
+
+export default class NakedSingle extends LogicalStep {
     constructor(board) {
         super(board, 'Naked Single');
     }

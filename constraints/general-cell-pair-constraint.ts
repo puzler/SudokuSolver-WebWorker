@@ -1,4 +1,9 @@
-class GeneralCellPairConstraint extends Constraint {
+import { registerAggregateConstraint } from "../constraint-builder";
+import { hasValue, valueBit } from "../solve-utility";
+import { cellIndexFromAddress } from "../solve-worker";
+import Constraint, { ConstraintResult } from "./constraint";
+
+export default class GeneralCellPairConstraint extends Constraint {
     constructor(constraintName, specificName, constraintGroup, isPairAllowed, negativePairsGenerator, board, params) {
         const cellPairs = params.cellsPairs.map(cells => cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size)).sort((a, b) => a - b));
         super(board, constraintName, specificName);
@@ -10,6 +15,14 @@ class GeneralCellPairConstraint extends Constraint {
         this.isPairAllowed = isPairAllowed;
         this.negativePairsGenerator = negativePairsGenerator;
     }
+
+    cells: any
+    cellPairs: any
+    cellPairKeys: any
+    cellsSet: Set<any>
+    constraintGroup: any
+    isPairAllowed: any
+    negativePairsGenerator: any
 
     init(board, isRepeat) {
         // Positive constraint weak links
@@ -181,154 +194,156 @@ function* diagonalPairsGenerator(board) {
     }
 }
 
-// Register a difference constraint
-registerAggregateConstraint((board, boardData) => {
-    const instances = (boardData.difference || []).map(instance => {
-        if (instance.value !== undefined) {
-            return instance;
-        }
-        const newInstance = { ...instance };
-        newInstance.value = 1;
-        return newInstance;
-    });
-
-    const instancesByValue = {};
-    for (const instance of instances) {
-        if (!instancesByValue[instance.value]) {
-            instancesByValue[instance.value] = [];
-        }
-        instancesByValue[instance.value].push(instance);
-    }
-
-    const hasNonconsecutive = boardData.nonconsecutive === true;
-    const hasDifferentNegative = Array.isArray(boardData.negative) && boardData.negative.includes('difference');
-
-    if (hasNonconsecutive) {
-        instancesByValue['1'] = instancesByValue['1'] || [];
-    }
-
-    const constraints = [];
-    for (const value of Object.keys(instancesByValue)) {
-        const instances = instancesByValue[value];
-        const numValue = Number(value);
-        const isAllowed = (value1, value2) => Math.abs(value1 - value2) === numValue;
-        const negativePairsGenerator = (hasNonconsecutive && numValue === 1) || hasDifferentNegative ? orthogonalPairsGenerator : null;
-        const params = {
-            cellsPairs: instances.map(instance => instance.cells),
-        };
-        const constraint = new GeneralCellPairConstraint(
-            'Difference',
-            `Difference of ${value}`,
-            'kropki',
-            isAllowed,
-            negativePairsGenerator,
-            board,
-            params
-        );
-        constraints.push(constraint);
-    }
-    return constraints;
-});
-
-// Register a ratio constraint
-registerAggregateConstraint((board, boardData) => {
-    const instances = (boardData.ratio || []).map(instance => {
-        if (instance.value !== undefined) {
-            return instance;
-        }
-        const newInstance = { ...instance };
-        newInstance.value = 2;
-        return newInstance;
-    });
-
-    const instancesByValue = {};
-    for (const instance of instances) {
-        if (!instancesByValue[instance.value]) {
-            instancesByValue[instance.value] = [];
-        }
-        instancesByValue[instance.value].push(instance);
-    }
-
-    const hasNegative = Array.isArray(boardData.negative) && boardData.negative.includes('ratio');
-    if (hasNegative) {
-        instancesByValue['2'] = instancesByValue['2'] || [];
-    }
-
-    const constraints = [];
-    for (const value of Object.keys(instancesByValue)) {
-        const instances = instancesByValue[value];
-        const numValue = Number(value);
-        const isAllowed = (value1, value2) => value1 === numValue * value2 || value2 === numValue * value1;
-        const negativePairsGenerator = hasNegative ? orthogonalPairsGenerator : null;
-        const params = {
-            cellsPairs: instances.map(instance => instance.cells),
-        };
-        const constraint = new GeneralCellPairConstraint('Ratio', `Ratio of ${value}`, 'kropki', isAllowed, negativePairsGenerator, board, params);
-        constraints.push(constraint);
-    }
-    return constraints;
-});
-
-// Register an XV constraint
-registerAggregateConstraint((board, boardData) => {
-    const instances = (boardData.xv || [])
-        .filter(instance => instance.value === 'x' || instance.value === 'X' || instance.value === 'v' || instance.value === 'V')
-        .map(instance => {
+export function register() {
+    // Register a difference constraint
+    registerAggregateConstraint((board, boardData) => {
+        const instances = (boardData.difference || []).map(instance => {
+            if (instance.value !== undefined) {
+                return instance;
+            }
             const newInstance = { ...instance };
-            newInstance.value = instance.value === 'x' || instance.value === 'X' ? 10 : 5;
+            newInstance.value = 1;
             return newInstance;
         });
-
-    const instancesByValue = {};
-    for (const instance of instances) {
-		if (!instancesByValue[instance.value]) {
-			instancesByValue[instance.value] = [];
-		}
-        instancesByValue[instance.value].push(instance);
-    }
-
-    const hasNegative = Array.isArray(boardData.negative) && boardData.negative.includes('xv');
-    if (hasNegative) {
-        instancesByValue['5'] = instancesByValue['5'] || [];
-        instancesByValue['10'] = instancesByValue['10'] || [];
-    }
-
-    const constraints = [];
-    for (const value of Object.keys(instancesByValue)) {
-        const instances = instancesByValue[value];
-        const numValue = Number(value);
-        const isAllowed = (value1, value2) => value1 + value2 === numValue;
-        const negativePairsGenerator = hasNegative ? orthogonalPairsGenerator : null;
-        const params = {
-            cellsPairs: instances.map(instance => instance.cells),
-        };
-        const constraint = new GeneralCellPairConstraint('XV', `XV`, 'sum', isAllowed, negativePairsGenerator, board, params);
-        constraints.push(constraint);
-    }
-    return constraints;
-});
-
-// Register a sum constraint
-registerAggregateConstraint((board, boardData) => {
-    const instances = (boardData.sum || []);
-    const instancesByValue = {};
-    for (const instance of instances) {
-        instancesByValue[instance.value].push(instance);
-    }
-
-    const hasNegative = Array.isArray(boardData.negative) && boardData.negative.includes('sum');
-
-    const constraints = [];
-    for (const value of Object.keys(instancesByValue)) {
-        const instances = instancesByValue[value];
-        const numValue = Number(value);
-        const isAllowed = (value1, value2) => value1 + value2 === numValue;
-        const negativePairsGenerator = hasNegative ? orthogonalPairsGenerator : null;
-        const params = {
-            cellsPairs: instances.map(instance => instance.cells),
-        };
-        const constraint = new GeneralCellPairConstraint('Sum', `Sum of ${value}`, 'sum', isAllowed, negativePairsGenerator, board, params);
-        constraints.push(constraint);
-    }
-    return constraints;
-});
+    
+        const instancesByValue = {};
+        for (const instance of instances) {
+            if (!instancesByValue[instance.value]) {
+                instancesByValue[instance.value] = [];
+            }
+            instancesByValue[instance.value].push(instance);
+        }
+    
+        const hasNonconsecutive = boardData.nonconsecutive === true;
+        const hasDifferentNegative = Array.isArray(boardData.negative) && boardData.negative.includes('difference');
+    
+        if (hasNonconsecutive) {
+            instancesByValue['1'] = instancesByValue['1'] || [];
+        }
+    
+        const constraints = [] as Array<GeneralCellPairConstraint>;
+        for (const value of Object.keys(instancesByValue)) {
+            const instances = instancesByValue[value];
+            const numValue = Number(value);
+            const isAllowed = (value1, value2) => Math.abs(value1 - value2) === numValue;
+            const negativePairsGenerator = (hasNonconsecutive && numValue === 1) || hasDifferentNegative ? orthogonalPairsGenerator : null;
+            const params = {
+                cellsPairs: instances.map(instance => instance.cells),
+            };
+            const constraint = new GeneralCellPairConstraint(
+                'Difference',
+                `Difference of ${value}`,
+                'kropki',
+                isAllowed,
+                negativePairsGenerator,
+                board,
+                params
+            );
+            constraints.push(constraint);
+        }
+        return constraints;
+    });
+    
+    // Register a ratio constraint
+    registerAggregateConstraint((board, boardData) => {
+        const instances = (boardData.ratio || []).map(instance => {
+            if (instance.value !== undefined) {
+                return instance;
+            }
+            const newInstance = { ...instance };
+            newInstance.value = 2;
+            return newInstance;
+        });
+    
+        const instancesByValue = {};
+        for (const instance of instances) {
+            if (!instancesByValue[instance.value]) {
+                instancesByValue[instance.value] = [];
+            }
+            instancesByValue[instance.value].push(instance);
+        }
+    
+        const hasNegative = Array.isArray(boardData.negative) && boardData.negative.includes('ratio');
+        if (hasNegative) {
+            instancesByValue['2'] = instancesByValue['2'] || [];
+        }
+    
+        const constraints = [] as Array<GeneralCellPairConstraint>;
+        for (const value of Object.keys(instancesByValue)) {
+            const instances = instancesByValue[value];
+            const numValue = Number(value);
+            const isAllowed = (value1, value2) => value1 === numValue * value2 || value2 === numValue * value1;
+            const negativePairsGenerator = hasNegative ? orthogonalPairsGenerator : null;
+            const params = {
+                cellsPairs: instances.map(instance => instance.cells),
+            };
+            const constraint = new GeneralCellPairConstraint('Ratio', `Ratio of ${value}`, 'kropki', isAllowed, negativePairsGenerator, board, params);
+            constraints.push(constraint);
+        }
+        return constraints;
+    });
+    
+    // Register an XV constraint
+    registerAggregateConstraint((board, boardData) => {
+        const instances = (boardData.xv || [])
+            .filter(instance => instance.value === 'x' || instance.value === 'X' || instance.value === 'v' || instance.value === 'V')
+            .map(instance => {
+                const newInstance = { ...instance };
+                newInstance.value = instance.value === 'x' || instance.value === 'X' ? 10 : 5;
+                return newInstance;
+            });
+    
+        const instancesByValue = {};
+        for (const instance of instances) {
+            if (!instancesByValue[instance.value]) {
+                instancesByValue[instance.value] = [];
+            }
+            instancesByValue[instance.value].push(instance);
+        }
+    
+        const hasNegative = Array.isArray(boardData.negative) && boardData.negative.includes('xv');
+        if (hasNegative) {
+            instancesByValue['5'] = instancesByValue['5'] || [];
+            instancesByValue['10'] = instancesByValue['10'] || [];
+        }
+    
+        const constraints = [] as Array<GeneralCellPairConstraint>;
+        for (const value of Object.keys(instancesByValue)) {
+            const instances = instancesByValue[value];
+            const numValue = Number(value);
+            const isAllowed = (value1, value2) => value1 + value2 === numValue;
+            const negativePairsGenerator = hasNegative ? orthogonalPairsGenerator : null;
+            const params = {
+                cellsPairs: instances.map(instance => instance.cells),
+            };
+            const constraint = new GeneralCellPairConstraint('XV', `XV`, 'sum', isAllowed, negativePairsGenerator, board, params);
+            constraints.push(constraint);
+        }
+        return constraints;
+    });
+    
+    // Register a sum constraint
+    registerAggregateConstraint((board, boardData) => {
+        const instances = (boardData.sum || []);
+        const instancesByValue = {};
+        for (const instance of instances) {
+            instancesByValue[instance.value].push(instance);
+        }
+    
+        const hasNegative = Array.isArray(boardData.negative) && boardData.negative.includes('sum');
+    
+        const constraints = [] as Array<GeneralCellPairConstraint>;
+        for (const value of Object.keys(instancesByValue)) {
+            const instances = instancesByValue[value];
+            const numValue = Number(value);
+            const isAllowed = (value1, value2) => value1 + value2 === numValue;
+            const negativePairsGenerator = hasNegative ? orthogonalPairsGenerator : null;
+            const params = {
+                cellsPairs: instances.map(instance => instance.cells),
+            };
+            const constraint = new GeneralCellPairConstraint('Sum', `Sum of ${value}`, 'sum', isAllowed, negativePairsGenerator, board, params);
+            constraints.push(constraint);
+        }
+        return constraints;
+    });    
+}
