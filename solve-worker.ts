@@ -130,7 +130,6 @@ function defineBoard(data: { definition: string }) {
                 return value
             }
         )
-        ('received definition', boardDefinition, data.definition)
     }
 }
 
