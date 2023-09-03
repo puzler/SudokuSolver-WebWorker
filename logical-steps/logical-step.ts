@@ -1,3 +1,5 @@
+import type Board from "../board";
+
 // Reflects what has happened to the board
 export const LogicalStepResult = Object.freeze({
     UNCHANGED: 0,
@@ -6,7 +8,7 @@ export const LogicalStepResult = Object.freeze({
 });
 
 export default class LogicalStep {
-    constructor(board, name) {
+    constructor(board: Board, name: string) {
         this.name = name;
 
         // Cache common values
@@ -31,26 +33,26 @@ export default class LogicalStep {
     constraintName?: string
     size: number
     allValues: any
-    givenBit: any
-    cellIndex: any
-    cellCoords: any
-    candidateIndexRC: any
-    candidateIndex: any
-    cellIndexFromCandidate: any
-    valueFromCandidate: any
-    maskStrictlyLower: any
-    maskStrictlyHigher: any
-    maskLowerOrEqual: any
-    maskHigherOrEqual: any
-    maskBetweenInclusive: any
-    maskBetweenExclusive: any
+    givenBit: number
+    cellIndex: (row: number, col: number) => number
+    cellCoords: (index: number) => number[]
+    candidateIndexRC: (row: number, col: number, value: number) => number
+    candidateIndex: (cellIndex: number, value: number) => number
+    cellIndexFromCandidate: (candidateIndex: number) => number
+    valueFromCandidate: (candidateIndex: number) => number
+    maskStrictlyLower: (v: any) => number
+    maskStrictlyHigher: (v: any) => number
+    maskLowerOrEqual: (v: any) => number
+    maskHigherOrEqual: (v: any) => number
+    maskBetweenInclusive: (v1: any, v2: any) => number
+    maskBetweenExclusive: (v1: any, v2: any) => number
 
     // Returns the name of the logical step
     toString() {
         return this.constraintName;
     }
 
-	step(board, desc): 0|1|2 {
+	step(board: Board, desc: string[]): 0|1|2|undefined {
 		return LogicalStepResult.UNCHANGED;
 	}
 }

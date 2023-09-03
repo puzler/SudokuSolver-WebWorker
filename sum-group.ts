@@ -1,3 +1,4 @@
+import Board from './board'
 import { ConstraintResult } from "./constraints/constraint";
 import {
     cellsKey,
@@ -14,12 +15,12 @@ import {
 } from "./solve-utility";
 
 export default class SumGroup {
-    constructor(board, cells, excludeValue = 0) {
+    constructor(board: Board, cells: number[], excludeValue = 0) {
         this.boardSize = board.size;
         this.givenBit = board.givenBit;
-        this.cells = cells.toSorted((a, b) => a - b);
+        this.cells = [...cells].sort((a: number, b: number) => a - b);
         if (excludeValue >= 1 && excludeValue <= board.size) {
-            this.includeMask = board.allValues ^ board.valueBit(excludeValue);
+            this.includeMask = board.allValues ^ valueBit(excludeValue);
             this.cellsString = cellsKey(`SumGroupE${excludeValue}`, this.cells, this.boardSize);
         } else {
             this.includeMask = board.allValues;
@@ -29,11 +30,11 @@ export default class SumGroup {
 
     boardSize: number
     givenBit: any
-    cells: any
+    cells: number[]
     includeMask: any
     cellsString: any
 
-    minMaxSum(board) {
+    minMaxSum(board: Board) {
         // Trivial case of max number of cells
         if (this.cells.length === board.size) {
             const sum = (board.size * (board.size + 1)) / 2;
@@ -52,7 +53,7 @@ export default class SumGroup {
         return minMax;
     }
 
-    calcMinMaxSum(board) {
+    calcMinMaxSum(board: Board) {
         // Check if the excluded value must be included
         if (this.cells.some(cell => (board.cells[cell] & this.includeMask & ~board.givenBit) === 0)) {
             return [0, 0];
@@ -101,7 +102,7 @@ export default class SumGroup {
 
         let min = 0;
         for (let combination of combinations(possibleVals, unsetCells.length)) {
-            let curSum = givenSum + combination.reduce((sum, value) => sum + value, 0);
+            let curSum = givenSum + combination.reduce((sum: number, value: number) => sum + value, 0);
             if (min === 0 || curSum < min) {
                 if (board.canPlaceDigitsAnyOrder(unsetCells, combination)) {
                     min = curSum;
@@ -115,7 +116,7 @@ export default class SumGroup {
         let max = min;
         let potentialCombinations = [] as Array<{ combination: any, sum: any }>;
         for (let combination of combinations(possibleVals, unsetCells.length)) {
-            let curSum = givenSum + combination.reduce((sum, value) => sum + value, 0);
+            let curSum = givenSum + combination.reduce((sum: number, value: number) => sum + value, 0);
             if (curSum > max) {
                 potentialCombinations.push({ combination: combination, sum: curSum });
             }
@@ -131,17 +132,17 @@ export default class SumGroup {
         return [min, max];
     }
 
-    restrictSumToArray(board, sum) {
+    restrictSumToArray(board: Board, sum: number) {
         return this.restrictSumsToArray(board, [sum]);
     }
 
-    restrictSumsToArray(board, sums) {
+    restrictSumsToArray(board: Board, sums: number[]) {
         const sumsSet = new Set(sums) as Set<number>;
 		const sortedSums = Array.from(sumsSet).sort((a, b) => a - b);
         return this.restrictSumHelper(board, sortedSums);
     }
 
-    restrictMinMaxSum(board, minSum, maxSum) {
+    restrictMinMaxSum(board: Board, minSum: number, maxSum: number) {
         let sortedSums = [] as Array<number>;
 		for (let sum = minSum; sum <= maxSum; sum++) {
 			sortedSums.push(sum);
@@ -149,11 +150,11 @@ export default class SumGroup {
 		return this.restrictSums(board, sortedSums);
     }
 
-    restrictSum(board, sum) {
+    restrictSum(board: Board, sum: number) {
         return this.restrictSums(board, [sum]);
     }
 
-    restrictSums(board, sums) {
+    restrictSums(board: Board, sums: number[]) {
         const sumsSet = new Set(sums) as Set<number>;
 		const sortedSums = Array.from(sumsSet).sort((a, b) => a - b);
 
@@ -164,7 +165,7 @@ export default class SumGroup {
         return result.constraintResult;
     }
 
-	restrictSumHelper(board, sums) {
+	restrictSumHelper(board: Board, sums: number[]) {
         const resultMasks = new Array(this.cells.length);
         for (let i = 0; i < this.cells.length; i++) {
             const cell = this.cells[i];
@@ -247,7 +248,7 @@ export default class SumGroup {
 
 			newMasks = new Array(numUnsetCells);
 			for (let combination of combinations(possibleVals, numUnsetCells)) {
-				let curSum = givenSum + combination.reduce((sum, value) => sum + value, 0);
+				let curSum = givenSum + combination.reduce((sum: number, value: number) => sum + value, 0);
 				if (sums.includes(curSum)) {
 					for (let perm of permutations(combination)) {
 						let needCheck = false;
@@ -294,14 +295,14 @@ export default class SumGroup {
 		return { constraintResult: constraintResult, masks: resultMasks };
     }
 
-	applySumResult(board, resultMasks) {
+	applySumResult(board: Board, resultMasks: number[]) {
 		for (let cellIndex = 0; cellIndex < this.cells.length; cellIndex++) {
 			const cell = this.cells[cellIndex];
 			board.setCellMask(cell, resultMasks[cellIndex]);
 		}
 	}
 
-	possibleSums(board) {
+	possibleSums(board: Board) {
         let unsetCells = this.cells;
         let givenSum = this.givenSum(board);
         if (givenSum > 0) {
@@ -342,7 +343,7 @@ export default class SumGroup {
 
 		let sumsSet = new Set() as Set<number>;
 		for (let combination of combinations(possibleVals, numUnsetCells)) {
-			const curSum = givenSum + combination.reduce((sum, value) => sum + value, 0);
+			const curSum = givenSum + combination.reduce((sum: number, value: number) => sum + value, 0);
 			if (!sumsSet.has(curSum)) {
                 // Find if any permutation fits into the cells
                 for (let perm of permutations(combination)) {
@@ -362,7 +363,7 @@ export default class SumGroup {
 		return sortedSums;
     }
 
-	isSumPossible(board, sum) {
+	isSumPossible(board: Board, sum: number) {
 		let unsetCells = this.cells;
 		let givenSum = this.givenSum(board);
 		if (givenSum > sum) {
@@ -400,7 +401,7 @@ export default class SumGroup {
 
 		const possibleVals = valuesList(unsetMask);
 		for (let combination of combinations(possibleVals, numUnsetCells)) {
-			const curSum = givenSum + combination.reduce((sum, value) => sum + value, 0);
+			const curSum = givenSum + combination.reduce((sum: number, value: number) => sum + value, 0);
 			if (curSum === sum) {
 				for (let perm of permutations(combination)) {
 					if (board.canPlaceDigits(unsetCells, perm)) {
@@ -416,7 +417,7 @@ export default class SumGroup {
 	}
 
     // Utility functions
-    unsetMask(board) {
+    unsetMask(board: Board) {
         let combMask = 0;
         for (let i = 0; i < this.cells.length; i++) {
             const mask = board.cells[this.cells[i]];
@@ -427,7 +428,7 @@ export default class SumGroup {
         return combMask & this.includeMask;
     }
 
-    givenSum(board) {
+    givenSum(board: Board) {
         let sum = 0;
         for (let i = 0; i < this.cells.length; i++) {
             sum += this.getGivenValue(board.cells[this.cells[i]]);
@@ -435,7 +436,7 @@ export default class SumGroup {
         return sum;
     }
 
-    getGivenValue(mask) {
+    getGivenValue(mask: number) {
         if ((mask & this.givenBit) !== 0 || popcount(mask) === 1) {
             return minValue(mask);
         }

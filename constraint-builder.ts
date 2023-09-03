@@ -4,15 +4,15 @@
 // registerConstraint("killercage", (board, params) => new KillerCageConstraint(board, params));
 import Constraint from './constraints/constraint'
 import Board from './board';
-import { BoardDefinition } from './solve-worker';
+import type { BoardDefinition } from './solve-worker';
 
-const constraintBuilder = {};
-const aggregateConstraintBuilders = [] as Array<(board: Board, boardData) => Array<Constraint>|Constraint>;
+const constraintBuilder = {} as Record<string, (board: Board, params: any, definition?: any) => Constraint|Constraint[]>;
+const aggregateConstraintBuilders = [] as Array<(board: Board, boardData: any, definition: BoardDefinition) => Constraint|Constraint[]>;
 const constraintNames = [] as Array<string>;
 
-export function buildConstraints(boardData, board: Board, boardDefinition: BoardDefinition = {}) {
+export function buildConstraints(boardData: any, board: Board, boardDefinition: BoardDefinition = {}) {
 	for (const builder of aggregateConstraintBuilders) {
-		const newConstraints = builder(board, boardData);
+		const newConstraints = builder(board, boardData, boardDefinition);
 		if (Array.isArray(newConstraints)) {
 			for (const constraint of newConstraints) {
 				if (!(constraint instanceof Constraint)) {
@@ -28,7 +28,7 @@ export function buildConstraints(boardData, board: Board, boardDefinition: Board
 	}
 
 	for (const constraintName of constraintNames) {
-		const constraintDefinition = (boardDefinition.constraints || {})[constraintName]
+		const constraintDefinition = ((boardDefinition.constraints || {}) as Record<string, any>)[constraintName]
 		const constraintData = constraintDefinition?.collector?.call(undefined, boardData) || boardData[constraintName]
 
 		const builder = constraintBuilder[constraintName];
@@ -55,12 +55,12 @@ export function buildConstraints(boardData, board: Board, boardDefinition: Board
 }
 
 // Assumes the data is an array of constraint instances and sends one instance at a time
-export function registerConstraint(constraintName, builder: (board: Board, params, definition?: any) => void) {
+export function registerConstraint(constraintName: string, builder: (board: Board, params: any, definition?: any) => Constraint|Constraint[]) {
 	constraintBuilder[constraintName] = builder;
 	constraintNames.push(constraintName);
 }
 
 // Always called, and sends the entire board data
-export function registerAggregateConstraint(builder: (board: Board, boardData) => Array<Constraint>|Constraint) {
+export function registerAggregateConstraint(builder: (board: Board, boardData: any, definition: BoardDefinition) => Constraint|Constraint[]) {
 	aggregateConstraintBuilders.push(builder);
 }

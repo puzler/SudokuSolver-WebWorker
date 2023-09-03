@@ -1,13 +1,13 @@
-import { LogicResult } from "../board";
+import Board, { LogicResult } from "../board";
 import { maskToString, minValue, cellName } from "../solve-utility";
 import LogicalStep from "./logical-step";
 
 export default class HiddenSingle extends LogicalStep {
-	constructor(board) {
+	constructor(board: Board) {
 		super(board, 'Hidden Single');
 	}
 
-	step(board, desc) {
+	step(board: Board, desc: string[]) {
 		const { size, givenBit, cells, allValues } = board;
         for (const region of board.regions) {
             const regionCells = region.cells;

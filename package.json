@@ -21,8 +21,5 @@
   "bugs": {
     "url": "https://github.com/charliepugh92/SudokuSolver-WebWorker/issues"
   },
-  "homepage": "https://github.com/charliepugh92/SudokuSolver-WebWorker#readme",
-  "dependencies": {
-    "json-fn": "^1.1.1"
-  }
+  "homepage": "https://github.com/charliepugh92/SudokuSolver-WebWorker#readme"
 }

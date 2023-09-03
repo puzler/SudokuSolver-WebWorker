@@ -1,4 +1,4 @@
-import { LogicResult } from "../board";
+import Board, { LogicResult } from "../board";
 import {
 	popcount,
 	combinations,
@@ -9,11 +9,11 @@ import {
 import LogicalStep from "./logical-step";
 
 export default class NakedTupleAndPointing extends LogicalStep {
-    constructor(board) {
+    constructor(board: Board) {
         super(board, 'Naked Tuple and Pointing');
     }
 
-	step(board, desc) {
+	step(board: Board, desc: string[]) {
 		const { size, cells } = board;
 		for (let tupleSize = 2; tupleSize < size; tupleSize++) {
 			for (const region of board.regions) {
@@ -24,7 +24,7 @@ export default class NakedTupleAndPointing extends LogicalStep {
 
 				// Make a list of cells which aren't already set
 				const nonGivenCells = regionCells
-                    .map(cellIndex => ({ cellIndex, cellMask: cells[cellIndex] }))
+                    .map((cellIndex: number) => ({ cellIndex, cellMask: cells[cellIndex] as number }))
                     .filter(({ cellIndex }) => !board.isGiven(cellIndex));
 
 				// If the non-given cells are the tuple size or smaller, then we just want pointing
@@ -44,14 +44,16 @@ export default class NakedTupleAndPointing extends LogicalStep {
 
 				// Look through all combinations of cells that could be a tuple
 				for (let tupleCells of combinations(potentialTupleCells, tupleSize)) {
-    				const tupleMask = tupleCells.reduce((accumulator, cell) => accumulator | cell.cellMask, 0);
+    				const tupleMask = tupleCells.reduce(
+							(accumulator: number, cell: { cellMask: number }) => accumulator | cell.cellMask, 0,
+						);
 					if (popcount(tupleMask) !== tupleSize) {
 						continue;
 					}
 
 					// Find if there are other cells which have the same mask
 					const otherCells = nonGivenCells.filter(
-                        ({ cellIndex, cellMask }) => (cellMask & ~tupleMask) === 0 && !tupleCells.some(tupleCell => tupleCell.cellIndex === cellIndex)
+                        ({ cellIndex, cellMask }) => (cellMask & ~tupleMask) === 0 && !tupleCells.some((tupleCell: { cellIndex: number }) => tupleCell.cellIndex === cellIndex)
                     );
 					if (otherCells.length !== 0) {
 						// Board is invalid
@@ -62,7 +64,7 @@ export default class NakedTupleAndPointing extends LogicalStep {
 					}
 
 					// Go through each value individually and build up the eliminations
-					const elimsSet = new Set();
+					const elimsSet: Set<number> = new Set();
                     for (let value of valuesList(tupleMask)) {
                         // Generate the list of candidate indexes in the tuple
                         const valueMask = valueBit(value);
@@ -107,13 +109,13 @@ export default class NakedTupleAndPointing extends LogicalStep {
 				for (let value = 1; value < size; value++) {
 					// Gather which cells have the value
 					const valueMask = valueBit(value);
-					const valueCells = regionCells.filter(cellIndex => (cells[cellIndex] & valueMask) !== 0);
+					const valueCells = regionCells.filter((cellIndex: number) => (cells[cellIndex] & valueMask) !== 0);
 					if (valueCells.length !== tupleSize) {
 						continue;
 					}
 
 					// Create a list of candidate indexes for the value
-					const valueCandidates = valueCells.map(cellIndex => board.candidateIndex(cellIndex, value));
+					const valueCandidates = valueCells.map((cellIndex: number) => board.candidateIndex(cellIndex, value));
 
 					// Find any eliminations
 					const elims = board.calcElimsForCandidateIndices(valueCandidates);

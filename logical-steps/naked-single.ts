@@ -1,12 +1,13 @@
 import LogicalStep, { LogicalStepResult } from "./logical-step";
 import { minValue, cellName } from "../solve-utility";
+import type Board from "../board";
 
 export default class NakedSingle extends LogicalStep {
-    constructor(board) {
+    constructor(board: Board) {
         super(board, 'Naked Single');
     }
 
-	step(board, desc) {
+	step(board: Board, desc: string[]): 0|1|2 {
 		if (board.nakedSingles.length === 0) {
 			return LogicalStepResult.UNCHANGED;
 		}

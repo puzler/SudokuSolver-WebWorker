@@ -1,24 +1,25 @@
+import type Board from "./board";
 import { ConstraintResult } from "./constraints/constraint";
 import { cellsKey, minValue, valueBit } from "./solve-utility";
 import SumGroup from "./sum-group";
 
 export default class SumCellsHelper {
-    constructor(board, cells) {
+    constructor(board: Board, cells: number[]) {
         this.groups = board.splitIntoGroups(cells).map(group => new SumGroup(board, group));
-        this.cells = cells.toSorted((a, b) => a - b);
+        this.cells = [...cells].sort((a, b) => a - b);
         this.cellsString = cellsKey('SumCellsHelper', this.cells, board.size);
     }
 
-    groups: any
-    cells: any
-    cellsString: any
+    groups: SumGroup[]
+    cells: number[]
+    cellsString: string
 
-    init(board, possibleSums) {
+    init(board: Board, possibleSums: number[]) {
         if (possibleSums.length === 0) {
             return ConstraintResult.INVALID;
         }
 
-        const sums = possibleSums.toSorted((a, b) => a - b);
+        const sums = [...possibleSums].sort((a, b) => a - b);
 
         let minSum = 0;
         let maxSum = 0;
@@ -68,12 +69,12 @@ export default class SumCellsHelper {
         return changed ? ConstraintResult.CHANGED : ConstraintResult.UNCHANGED;
     }
 
-    logicStep(board, possibleSums, logicalStepDescription) {
+    logicStep(board: Board, possibleSums: number[], logicalStepDescription: null|string[]) {
         if (possibleSums.length === 0) {
             return ConstraintResult.INVALID;
         }
 
-        const sums = possibleSums.toSorted((a, b) => a - b);
+        const sums = [...possibleSums].sort((a, b) => a - b);
 
         let completedSum = 0;
         let numIncompleteGroups = 0;
@@ -213,7 +214,7 @@ export default class SumCellsHelper {
         return ConstraintResult.UNCHANGED;
     }
 
-    sumRange(board) {
+    sumRange(board: Board) {
         let minSum = 0;
         let maxSum = 0;
         for (const group of this.groups) {
@@ -224,9 +225,9 @@ export default class SumCellsHelper {
         return [minSum, maxSum];
     }
 
-    possibleSums(board) {
+    possibleSums(board: Board) {
         let completedSum = 0;
-        const incompleteGroupsSums = [] as Array<any>;
+        const incompleteGroupsSums = [] as number[][];
         for (const group of this.groups) {
             const possibleSums = group.possibleSums(board);
             if (possibleSums.length === 0) {
@@ -265,7 +266,7 @@ export default class SumCellsHelper {
     }
 
     // Note the '*' after 'function', which makes this a generator function
-    static *enumerateSums(groups, groupIndex = 0) {
+    static *enumerateSums(groups: number[][], groupIndex = 0): any {
         if (groupIndex === groups.length) {
             yield 0;
         } else {

@@ -1,4 +1,3 @@
-import JSONfn from 'json-fn'
 import Board from './board'
 import { buildConstraints } from './constraint-builder';
 import registerAllConstraints from './constraint-registry';
@@ -10,21 +9,53 @@ import {
     valuesMask,
 } from './solve-utility'
 
+export type CellDataParam = {
+    cell: any
+    row: number
+    column: number
+    boardData: any
+}
+
 export type BoardDefinition = {
     grid?: {
-        cells?: (boardData) => Array<Array<any>>,
-        givenPencilMarks?: ({ cell, row, column, boardData }) => undefined|null|Array<number>,
-        centerPencilMarks?: ({ cell, row, column, boardData }) => undefined|null|Array<number>,
-        value?: ({ cell, row, column, boardData }) => undefined|null|number
+        cells?: (boardData: any) => Array<Array<any>>
+        givenPencilMarks?: (cellDataParam: CellDataParam) => undefined|null|Array<number>
+        centerPencilMarks?: (cellDataParam: CellDataParam) => undefined|null|Array<number>
+        value?: (cellDataParam: CellDataParam) => undefined|null|number
+        cellIsGiven?: (cellDataParam: CellDataParam) => boolean
     }
     constraints?: {
         arrow?: {
-            collector?: (boardData) => any,
-            circleCells?: (arrow) => Array<any>,
-            lines?: (arrow) => Array<any>,
+            collector?: (boardData: any) => undefined|null|any[]
+            circleCells?: (arrow: any) => Array<any>
+            lines?: (arrow: any) => Array<any>
+        }
+        difference?: {
+            collector?: (boardData: any) => undefined|null|any[]
+            value?: (dot: any) => undefined|null|number
+            negative?: (boardData: any) => boolean
+            cells?: (dot: any) => any[]
+        }
+        ratio?: {
+            collector?: (boardData: any) => undefined|null|any[]
+            value?: (dot: any) => undefined|null|number
+            negative?: (boardData: any) => boolean
+            cells?: (dot: any) => any[]
+        }
+        xv?: {
+            collector?: (boardData: any) => undefined|null|any[]
+            value?: (instance: any) => undefined|null|'x'|'X'|'v'|'V'
+            cells?: (instance: any) => any[]
+            negative?: (boardData: any) => boolean|{ x: boolean; v: boolean }
+        }
+        sum?: {
+            collector?: (boardData: any) => undefined|null|any[]
+            value?: (instance: any) => any
+            cells?: (instance: any) => any[]
+            negative?: (boardData: any) => boolean
         }
     }
-    indexForAddress?: (address, size) => number
+    indexForAddress?: (address: any, size: number) => number
 };
 
 registerAllConstraints()
@@ -72,7 +103,7 @@ addEventListener(
     false
 );
 
-export function cellIndexFromAddress(address, size) {
+export function cellIndexFromAddress(address: any, size: number) {
     if (boardDefinition.indexForAddress) {
         return boardDefinition.indexForAddress(address, size)
     }
@@ -88,32 +119,39 @@ export function cellIndexFromAddress(address, size) {
 	return row * size + col;
 }
 
-function defineBoard(data) {
+function defineBoard(data: { definition: string }) {
     if (data.definition) {
-        boardDefinition = JSONfn.parse(data.definition)
+        boardDefinition = JSON.parse(
+            data.definition,
+            (_, value) => {
+                if (typeof value === 'object' && value.encodedFunc === true) {
+                    return new Function('return' + value.func)()
+                }
+
+                return value
+            }
+        )
     }
 }
 
-function solve(data) {
+function solve(data: { board: any, options?: { random?: boolean } }) {
     const board = createBoard(data.board);
     if (!board) {
         postMessage({ result: 'invalid' });
     } else {
         const solution = board.findSolution(data.options || {}, () => eventCanceled);
-        if (solution) {
-            if (solution.cancelled) {
-                postMessage({ result: 'cancelled' });
-            } else {
-                const solutionValues = solution.getValueArray();
-                postMessage({ result: 'solution', solution: solutionValues });
-            }
-        } else {
+        if (solution === null) {
             postMessage({ result: 'no solution' });
+        } else if (solution instanceof Board) {
+            const solutionValues = solution.getValueArray();
+            postMessage({ result: 'solution', solution: solutionValues });
+        } else if (solution.cancelled) {
+            postMessage({ result: 'cancelled' });
         }
     }
 };
 
-async function countSolutions(data) {
+async function countSolutions(data: { board: any, options?: { maxSolutions?: number } }) {
     const board = createBoard(data.board);
     if (!board) {
         postMessage({ result: 'invalid' });
@@ -134,7 +172,7 @@ async function countSolutions(data) {
     }
 };
 
-function expandCandidates(candidates: any, givenBit?: any) {
+function expandCandidates(candidates?: number[], givenBit?: number) {
     if (!givenBit) {
         return candidates?.map(mask => valuesList(mask));
     }
@@ -147,7 +185,7 @@ function expandCandidates(candidates: any, givenBit?: any) {
     });
 }
 
-async function trueCandidates(data) {
+async function trueCandidates(data: { board: any, options?: { maxSolutionsPerCandidate?: number } }) {
     const board = createBoard(data.board);
     if (!board) {
         postMessage({ result: 'invalid' });
@@ -168,7 +206,7 @@ async function trueCandidates(data) {
 };
 
 // Compares the initial candidates in the provided data with the final imported board.
-function candidatesDiffer(board, data) {
+function candidatesDiffer(board: Board, data: { board: any }) {
     const size = board.size;
     const dataGrid = gridFor(data.board)
     for (let i = 0; i < size; i++) {
@@ -186,15 +224,15 @@ function candidatesDiffer(board, data) {
             } else {
                 const givenPencilMarks = givenMarksFor(cellDataParams)
                 const centerPencilMarks = centerMarksFor(cellDataParams)
-                const haveGivenPencilmarks = givenPencilMarks?.length > 0;
-                const haveCenterPencilmarks = centerPencilMarks?.length > 0;
+                const haveGivenPencilmarks = (givenPencilMarks?.length || 0) > 0;
+                const haveCenterPencilmarks = (centerPencilMarks?.length  || 0) > 0;
 
                 if (haveGivenPencilmarks && haveCenterPencilmarks) {
-                    dataCellMask = valuesMask(givenPencilMarks.filter(value => centerPencilMarks.includes(value)));
+                    dataCellMask = valuesMask(givenPencilMarks!.filter(value => centerPencilMarks!.includes(value)));
                 } else if (haveGivenPencilmarks) {
-                    dataCellMask = valuesMask(givenPencilMarks);
+                    dataCellMask = valuesMask(givenPencilMarks!);
                 } else if (haveCenterPencilmarks) {
-                    dataCellMask = valuesMask(centerPencilMarks);
+                    dataCellMask = valuesMask(centerPencilMarks!);
                 }
             }
 
@@ -207,7 +245,7 @@ function candidatesDiffer(board, data) {
     return false;
 }
 
-async function step(data) {
+async function step(data: { board: any }) {
     const board = createBoard(data.board, true);
     if (!board) {
         postMessage({ result: 'step', desc: 'Board is invalid!', invalid: true, changed: false });
@@ -240,7 +278,7 @@ async function step(data) {
     postMessage({ result: 'step', desc: stepResult.desc, candidates: expandedCandidates, invalid: stepResult.invalid, changed: stepResult.changed });
 }
 
-async function logicalSolve(data) {
+async function logicalSolve(data: { board: any }) {
     const board = createBoard(data.board, true);
     if (!board) {
         postMessage({ result: 'logicalsolve', desc: ['Board is invalid!'], invalid: true, changed: false });
@@ -266,7 +304,7 @@ async function logicalSolve(data) {
     postMessage({ result: 'logicalsolve', desc, candidates: expandedCandidates, invalid: solveResult.invalid, changed: solveResult.changed });
 };
 
-function gridFor(boardData) {
+function gridFor(boardData: any) {
     if (boardDefinition.grid?.cells) {
         const grid = boardDefinition.grid.cells(boardData)
         return grid
@@ -275,7 +313,7 @@ function gridFor(boardData) {
     return boardData.grid
 }
 
-function givenMarksFor(cellParams) {
+function givenMarksFor(cellParams: CellDataParam): undefined|null|Array<number> {
     if (boardDefinition.grid?.givenPencilMarks) {
         return boardDefinition.grid.givenPencilMarks(cellParams)
     }
@@ -283,7 +321,7 @@ function givenMarksFor(cellParams) {
     return cellParams.cell.givenPencilMarks
 }
 
-function centerMarksFor(cellParams) {
+function centerMarksFor(cellParams: CellDataParam): undefined|null|Array<number> {
     if (boardDefinition.grid?.centerPencilMarks) {
         return boardDefinition.grid.centerPencilMarks(cellParams)
     }
@@ -291,7 +329,7 @@ function centerMarksFor(cellParams) {
     return cellParams.cell.centerPencilMarks
 }
 
-function valueFor(cellParams) {
+function valueFor(cellParams: CellDataParam): null|undefined|number {
     if (boardDefinition.grid?.value) {
         return boardDefinition.grid.value(cellParams)
     }
@@ -299,7 +337,15 @@ function valueFor(cellParams) {
     return cellParams.cell.value
 }
 
-function createBoard(boardData, keepPencilMarks = false) {
+function givenFor(cellParams: CellDataParam): null|undefined|boolean {
+    if (boardDefinition.grid?.cellIsGiven) {
+        return boardDefinition.grid.cellIsGiven(cellParams)
+    }
+
+    return cellParams.cell.given
+}
+
+function createBoard(boardData: any, keepPencilMarks = false) {
     const size = boardData.size;
     const board = new Board(size);
     const boardGrid = gridFor(boardData)
@@ -371,9 +417,10 @@ function createBoard(boardData, keepPencilMarks = false) {
             const givenPencilMarks = givenMarksFor(cellDataParam)
             const centerPencilMarks = centerMarksFor(cellDataParam)
             const cellValue = valueFor(cellDataParam)
+            const cellIsGiven = givenFor(cellDataParam)
 
-            const haveGivenPencilmarks = givenPencilMarks?.length > 0
-            const haveCenterPencilmarks = centerPencilMarks?.length > 0
+            const haveGivenPencilmarks = (givenPencilMarks?.length || 0) > 0
+            const haveCenterPencilmarks = (centerPencilMarks?.length || 0) > 0
 
             const cellIndex = board.cellIndex(i, j);
             if (keepPencilMarks) {
@@ -382,26 +429,26 @@ function createBoard(boardData, keepPencilMarks = false) {
                         return null;
                     }
                 } else if (haveGivenPencilmarks && haveCenterPencilmarks) {
-                    const pencilMarks = givenPencilMarks.filter(value => centerPencilMarks.includes(value));
+                    const pencilMarks = givenPencilMarks!.filter(value => centerPencilMarks!.includes(value));
                     if (!board.applyGivenPencilMarks(cellIndex, pencilMarks)) {
                         return null;
                     }
                 } else if (haveGivenPencilmarks) {
-                    if (!board.applyGivenPencilMarks(cellIndex, givenPencilMarks)) {
+                    if (!board.applyGivenPencilMarks(cellIndex, givenPencilMarks!)) {
                         return null;
                     }
                 } else if (haveCenterPencilmarks) {
-                    if (!board.applyGivenPencilMarks(cellIndex, centerPencilMarks)) {
+                    if (!board.applyGivenPencilMarks(cellIndex, centerPencilMarks!)) {
                         return null;
                     }
                 }
             } else {
-                 if (srcCell.given) {
+                 if (cellIsGiven && cellValue) {
                      if (!board.setAsGiven(cellIndex, cellValue)) {
                          return null;
                      }
                  } else if (haveGivenPencilmarks) {
-                     if (!board.applyGivenPencilMarks(cellIndex, givenPencilMarks)) {
+                     if (!board.applyGivenPencilMarks(cellIndex, givenPencilMarks!)) {
                          return null;
                      }
                  }
@@ -421,7 +468,7 @@ function createBoard(boardData, keepPencilMarks = false) {
     return board;
 };
 
-function applyDefaultRegions(boardGrid, size) {
+function applyDefaultRegions(boardGrid: any, size: number) {
     const regionSizes = {} as { w?: number; h?: number };
     for (let h = 1; h * h <= size; h++) {
         if (size % h === 0) {

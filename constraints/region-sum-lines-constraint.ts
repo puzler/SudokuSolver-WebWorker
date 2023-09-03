@@ -1,3 +1,4 @@
+import type Board from "../board";
 import { registerConstraint } from "../constraint-builder";
 import { cellName, minValue, valueBit } from "../solve-utility";
 import { cellIndexFromAddress } from "../solve-worker";
@@ -5,7 +6,7 @@ import SumGroup from "../sum-group";
 import Constraint, { ConstraintResult } from "./constraint";
 
 class RegionSumLinesConstraint extends Constraint {
-    constructor(board, params) {
+    constructor(board: Board, params: { cells: any[] }) {
         const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         const specificName = `Region Sum Line at ${cellName(cells[0], board.size)}`;
         super(board, 'Region Sum Line', specificName);
@@ -14,12 +15,12 @@ class RegionSumLinesConstraint extends Constraint {
         this.cellsSet = new Set(this.cells);
     }
 
-    cells: any
+    cells: number[]
     cellsSet: any
-    segments: Array<any>
-    sumGroups: Array<any>
+    segments?: Array<any>
+    sumGroups?: SumGroup[]
 
-    init(board, isRepeat) {
+    init(board: Board, isRepeat: boolean) {
         if (!isRepeat) {
             // Split cells into segments
             this.segments = [];
@@ -67,7 +68,7 @@ class RegionSumLinesConstraint extends Constraint {
 
         // Restrict all segements to the possible sums
         let changed = false;
-        for (const sumHelper of this.sumGroups) {
+        for (const sumHelper of (this.sumGroups || [])) {
             const restrictResult = sumHelper.restrictSums(board, possibleSums);
             if (restrictResult === ConstraintResult.INVALID) {
                 return ConstraintResult.INVALID;
@@ -80,7 +81,7 @@ class RegionSumLinesConstraint extends Constraint {
 		return changed ? ConstraintResult.CHANGED : ConstraintResult.UNCHANGED;
     }
 
-    enforce(board, cellIndex, value) {
+    enforce(board: Board, cellIndex: number, value: number) {
 		if (!this.cellsSet.has(cellIndex)) {
 			return true;
 		}
@@ -97,7 +98,7 @@ class RegionSumLinesConstraint extends Constraint {
 		return true;
 	}
 
-    logicStep(board, logicalStepDescription) {
+    logicStep(board: Board, logicalStepDescription: string[]) {
 		if (!this.sumGroups) {
 			return ConstraintResult.UNCHANGED;
 		}
@@ -153,9 +154,9 @@ class RegionSumLinesConstraint extends Constraint {
 		return changed ? ConstraintResult.CHANGED : ConstraintResult.UNCHANGED;
 	}
 
-    possibleSums(board) {
+    possibleSums(board: Board) {
         let sums = null as null|Set<any>;
-        for (const sumGroup of this.sumGroups) {
+        for (const sumGroup of (this.sumGroups || [])) {
             const possibleSums = sumGroup.possibleSums(board);
             if (possibleSums.length === 0) {
                 return [];
@@ -176,5 +177,13 @@ class RegionSumLinesConstraint extends Constraint {
 }
 
 export function register() {
-    registerConstraint('regionSumLines', (board, params) => params.lines.map(line => new RegionSumLinesConstraint(board, { cells: line })));
+    registerConstraint(
+        'regionSumLines',
+        (board, params, definition) => {
+            const lines = definition?.lines ? definition.lines(params) : params.lines
+            return lines.map(
+                (line: any[]) => new RegionSumLinesConstraint(board, { cells: line })
+            )
+        },
+    );
 }

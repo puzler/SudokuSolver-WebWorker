@@ -1,3 +1,5 @@
+import type Board from "../board";
+
 // Reflects what has happened to the board
 export const ConstraintResult = Object.freeze({
 	UNCHANGED: 0,
@@ -8,7 +10,7 @@ export const ConstraintResult = Object.freeze({
 export default class Constraint {
     // The constraintName is a string that is used to identify the constraint
     // The specificName is a string that is specific to this constraint instance
-    constructor(board, constraintName, specificName) {
+    constructor(board: Board, constraintName: string, specificName: string) {
         this.constraintName = constraintName;
         this.specificName = specificName;
 
@@ -34,19 +36,19 @@ export default class Constraint {
     specificName: string
     size: number
     allValues: any
-    givenBit: any
-    cellIndex: any
-    cellCoords: any
-    candidateIndexRC: any
-    candidateIndex: any
-    cellIndexFromCandidate: any
-    valueFromCandidate: any
-    maskStrictlyLower: any
-    maskStrictlyHigher: any
-    maskLowerOrEqual: any
-    maskHigherOrEqual: any
-    maskBetweenInclusive: any
-    maskBetweenExclusive: any
+    givenBit: number
+    cellIndex: (row: number, col: number) => number
+    cellCoords
+    candidateIndexRC
+    candidateIndex
+    cellIndexFromCandidate
+    valueFromCandidate
+    maskStrictlyLower
+    maskStrictlyHigher
+    maskLowerOrEqual
+    maskHigherOrEqual
+    maskBetweenInclusive
+    maskBetweenExclusive
 
     // Returns the name of the constraint
     toString() {
@@ -66,13 +68,13 @@ export default class Constraint {
     //  - isRepeat is true if this is not the first time init has been called on this constraint
 	// Never call board.setAsGiven from init as not all weak links have been added yet, so they may not be respected.
 	//  - Instead, use board.keepCellMask(cell, valueBit(value)) so that it will be a naked single at the appropriate time.
-    init(board, isRepeat): 0|1|2 {
+    init(board: Board, isRepeat: boolean): 0|1|2 {
         return ConstraintResult.UNCHANGED;
     }
 
     // Return true if the constraint is still satisfiable (false means the constraint is violated).
     // Do not modify the board (it cannot be reported to the user)
-    enforce(board, cellIndex, value) {
+    enforce(board: Board, cellIndex: number, value: number) {
         return true;
     }
 
@@ -80,32 +82,32 @@ export default class Constraint {
     // logicalStepDescription is an optional array of strings that will be filled with a description of the logic step
 	// This is used to report the logic step to the user
     // Returns a ConstraintResult
-    logicStep(board, logicalStepDescription): 0|1|2 {
+    logicStep(board: Board, logicalStepDescription: null|string[]): 0|1|2 {
         return ConstraintResult.UNCHANGED;
     }
 
     // Utility functions
-    taxiCabDistance(cellIndex1, cellIndex2) {
+    taxiCabDistance(cellIndex1: number, cellIndex2: number) {
         const [row1, col1] = this.cellCoords(cellIndex1);
         const [row2, col2] = this.cellCoords(cellIndex2);
         return Math.abs(row1 - row2) + Math.abs(col1 - col2);
     }
 
-    isAdjacent(cellIndex1, cellIndex2) {
+    isAdjacent(cellIndex1: number, cellIndex2: number) {
         return this.taxiCabDistance(cellIndex1, cellIndex2) === 1;
     }
 
-    isDiagonal(cellIndex1, cellIndex2) {
+    isDiagonal(cellIndex1: number, cellIndex2: number) {
         return this.taxiCabDistance(cellIndex1, cellIndex2) === 2;
     }
 
-    getOffset(cellIndex1, cellIndex2) {
+    getOffset(cellIndex1: number, cellIndex2: number) {
         const [row1, col1] = this.cellCoords(cellIndex1);
         const [row2, col2] = this.cellCoords(cellIndex2);
         return [row2 - row1, col2 - col1];
     }
 
-    getAbsoluteOffset(cellIndex1, cellIndex2) {
+    getAbsoluteOffset(cellIndex1: number, cellIndex2: number) {
         const [row1, col1] = this.cellCoords(cellIndex1);
         const [row2, col2] = this.cellCoords(cellIndex2);
         return [Math.abs(row2 - row1), Math.abs(col2 - col1)];

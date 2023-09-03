@@ -1,4 +1,4 @@
-import { ConstraintResult } from "./constraints/constraint";
+import Constraint, { ConstraintResult } from "./constraints/constraint";
 import CellForcing from "./logical-steps/cell-forcing";
 import ConstraintLogic from "./logical-steps/constraint-logic";
 import HiddenSingle from "./logical-steps/hidden-single";
@@ -27,7 +27,7 @@ export const LogicResult = Object.freeze({
 });
 
 class Board {
-    constructor(size) {
+    constructor(size: number) {
         this.size = size;
         this.allValues = allValues(size);
         this.givenBit = 1 << size;
@@ -51,17 +51,17 @@ class Board {
     size: number
     allValues: any
     givenBit: number
-    cells: any
+    cells: number[]
     nonGivenCount: any
     nakedSingles: any
     weakLinks: any
-    regions: any
-    constraints: any
+    regions: { cells: number[], name: string, fromConstraint: null|Constraint, type: string }[]
+    constraints: Constraint[]
     constraintsFinalized: boolean
-    memos: any
+    memos: Record<any, any>
     logicalSteps: any
 
-    clone() {
+    clone(): Board {
         // Shallow copy everything
         const clone = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
 
@@ -76,84 +76,84 @@ class Board {
         return JSON.stringify(this.getValueArray());
     }
 
-    cellIndex(row, col) {
+    cellIndex(row: number, col: number) {
         return row * this.size + col;
     }
 
-    cellCoords(cellIndex) {
+    cellCoords(cellIndex: number) {
         return [Math.floor(cellIndex / this.size), cellIndex % this.size];
     }
 
-    candidateIndexRC(row, col, value) {
+    candidateIndexRC(row: number, col: number, value: number) {
         return row * this.size * this.size + col * this.size + value - 1;
     }
 
-    candidateIndex(cellIndex, value) {
+    candidateIndex(cellIndex: number, value: number) {
         return cellIndex * this.size + value - 1;
     }
 
-    cellIndexFromCandidate(candidateIndex) {
+    cellIndexFromCandidate(candidateIndex: number) {
         return Math.floor(candidateIndex / this.size);
     }
 
-    candidateToIndexAndValue(candidateIndex) {
+    candidateToIndexAndValue(candidateIndex: number) {
         return [Math.floor(candidateIndex / this.size), (candidateIndex % this.size) + 1];
     }
 
-    valueFromCandidate(candidateIndex) {
+    valueFromCandidate(candidateIndex: number) {
         return (candidateIndex % this.size) + 1;
     }
 
-    maskStrictlyLower(v) {
+    maskStrictlyLower(v: number) {
         return (1 << (v - 1)) - 1;
     }
 
-    maskStrictlyHigher(v) {
+    maskStrictlyHigher(v: number) {
         return this.allValues ^ (1 << (v - 1));
     }
 
-    maskLowerOrEqual(v) {
+    maskLowerOrEqual(v: number) {
         return (1 << v) - 1;
     }
 
-    maskHigherOrEqual(v) {
+    maskHigherOrEqual(v: number) {
         return this.allValues ^ ((1 << v) - 1);
     }
 
-    maskBetweenInclusive(v1, v2) {
+    maskBetweenInclusive(v1: number, v2: number) {
         return this.maskHigherOrEqual(v1) & this.maskLowerOrEqual(v2);
     }
 
-    maskBetweenExclusive(v1, v2) {
+    maskBetweenExclusive(v1: number, v2: number) {
         return this.maskHigherOrEqual(v1) & this.maskStrictlyLower(v2);
     }
 
-    addWeakLink(index1, index2) {
+    addWeakLink(index1: number, index2: number) {
         if (index1 != index2) {
             this.weakLinks[index1].add(index2);
             this.weakLinks[index2].add(index1);
         }
     }
 
-    removeWeakLink(index1, index2) {
+    removeWeakLink(index1: number, index2: number) {
         if (index1 != index2) {
             this.weakLinks[index1].delete(index2);
             this.weakLinks[index2].delete(index1);
         }
     }
 
-    isWeakLink(index1, index2) {
+    isWeakLink(index1: number, index2: number) {
         return this.weakLinks[index1].has(index2);
     }
 
-    addRegion(name, cells, type, fromConstraint = null) {
+    addRegion(name: string, cells: number[], type: string, fromConstraint: null|Constraint = null) {
         // Don't add regions which are too large
         if (cells.length > this.size) {
             return;
         }
 
         // Do not add duplicate regions
-        if (this.regions.some(region => fromConstraint === region.fromConstraint && sequenceEqual(region, cells))) {
+        if (this.regions.some(region => fromConstraint === region.fromConstraint && sequenceEqual(region.cells, cells))) {
             return;
         }
 
@@ -161,7 +161,7 @@ class Board {
             name,
             fromConstraint,
             type,
-            cells: cells.toSorted((a, b) => a - b),
+            cells: [...cells].sort((a, b) => a - b),
         };
         this.regions.push(newRegion);
 
@@ -174,11 +174,11 @@ class Board {
         }
     }
 
-    getRegionsForCell(cellIndex, type = null) {
+    getRegionsForCell(cellIndex: number, type = null as null|string) {
         return this.regions.filter(region => region.cells.includes(cellIndex) && (type === null || region.type === type));
     }
 
-    addConstraint(constraint) {
+    addConstraint(constraint: Constraint) {
         this.constraints.push(constraint);
     }
 
@@ -207,7 +207,7 @@ class Board {
         return true;
     }
 
-    addNonRepeatWeakLinks(cellIndex1, cellIndex2) {
+    addNonRepeatWeakLinks(cellIndex1: number, cellIndex2: number) {
         if (cellIndex1 === cellIndex2) {
             return;
         }
@@ -219,7 +219,7 @@ class Board {
         }
     }
 
-    addCloneWeakLinks(cellIndex1, cellIndex2) {
+    addCloneWeakLinks(cellIndex1: number, cellIndex2: number) {
         if (cellIndex1 === cellIndex2) {
             return;
         }
@@ -237,16 +237,16 @@ class Board {
         }
     }
 
-    getMemo(key) {
+    getMemo(key: any) {
         // Simply return the value at the key, or null if it doesn't exist
         return this.memos[key] || null;
     }
 
-    storeMemo(key, val) {
+    storeMemo(key: any, val: any) {
         this.memos[key] = val;
     }
 
-    setCellMask(cellIndex, cellMask) {
+    setCellMask(cellIndex: number, cellMask: number) {
         if ((this.cells[cellIndex] & this.allValues) === cellMask) {
             return;
         }
@@ -257,7 +257,7 @@ class Board {
         }
     }
 
-    keepCellMask(cellIndex, cellMask) {
+    keepCellMask(cellIndex: number, cellMask: number) {
         const origMask = this.cells[cellIndex] & this.allValues;
         const newMask = origMask & cellMask;
         if (newMask === origMask) {
@@ -271,11 +271,11 @@ class Board {
         return newMask !== 0 ? ConstraintResult.CHANGED : ConstraintResult.INVALID;
     }
 
-    clearCellMask(cellIndex, cellMask) {
+    clearCellMask(cellIndex: number, cellMask: number) {
         return this.keepCellMask(cellIndex, this.allValues & ~cellMask);
     }
 
-    clearValue(cellIndex, value) {
+    clearValue(cellIndex: number, value: number) {
         this.cells[cellIndex] &= ~valueBit(value);
         if ((this.cells[cellIndex] & this.allValues) === 0) {
             return false;
@@ -286,12 +286,12 @@ class Board {
         return true;
     }
 
-    clearCandidate(candidate) {
+    clearCandidate(candidate: number) {
         const [cellIndex, value] = this.candidateToIndexAndValue(candidate);
         return this.clearValue(cellIndex, value);
     }
 
-    clearCandidates(candidates) {
+    clearCandidates(candidates: number[]) {
         let valid = true;
         for (let candidate of candidates) {
             if (!this.clearCandidate(candidate)) {
@@ -301,7 +301,7 @@ class Board {
         return valid;
     }
 
-    isGroup(cells) {
+    isGroup(cells: number[]) {
         for (let i0 = 0; i0 < cells.length - 1; i0++) {
             const cell0 = cells[i0];
             for (let i1 = i0 + 1; i1 < cells.length; i1++) {
@@ -322,7 +322,7 @@ class Board {
         return true;
     }
 
-    isGroupByValue(cells, value) {
+    isGroupByValue(cells: number[], value: number) {
         for (let i0 = 0; i0 < cells.length - 1; i0++) {
             const cell0 = cells[i0];
             const candidate0 = this.candidateIndex(cell0, value);
@@ -341,7 +341,7 @@ class Board {
         return true;
     }
 
-    isGroupByValueMask(cells, valueMask) {
+    isGroupByValueMask(cells: number[], valueMask: number) {
         for (let i0 = 0; i0 < cells.length - 1; i0++) {
             const cell0 = cells[i0];
             for (let i1 = i0 + 1; i1 < cells.length; i1++) {
@@ -364,8 +364,8 @@ class Board {
         return true;
     }
 
-    splitIntoGroups(cells) {
-        const groups = [] as Array<any>;
+    splitIntoGroups(cells: number[]) {
+        const groups = [] as number[][];
 
         if (cells.length === 0) {
             return groups;
@@ -450,7 +450,7 @@ class Board {
         }
     }
 
-    canPlaceDigits(cells, values) {
+    canPlaceDigits(cells: number[], values: number[]) {
         const numCells = cells.length;
         if (numCells != values.length) {
             throw new Error('cells and values must have the same length');
@@ -486,7 +486,7 @@ class Board {
         return true;
     }
 
-    canPlaceDigitsAnyOrder(cells, values) {
+    canPlaceDigitsAnyOrder(cells: number[], values: number[]) {
         const numCells = cells.length;
         if (numCells != values.length) {
             throw new Error('cells and values must have the same length');
@@ -513,11 +513,11 @@ class Board {
         return false;
     }
 
-    valueNames(mask) {
+    valueNames(mask: number) {
         return maskToString(mask, this.size);
     }
 
-    compactName(cells, mask = null) {
+    compactName(cells: any[], mask = null as null|number) {
         let valuesString = '';
         if (mask) {
             valuesString += this.valueNames(mask);
@@ -557,7 +557,7 @@ class Board {
             );
         }
 
-        const colsPerRow = new Array(this.size);
+        const colsPerRow: number[][] = new Array(this.size);
         for (let i = 0; i < this.size; i++) {
             colsPerRow[i] = [];
         }
@@ -588,7 +588,7 @@ class Board {
         return valuesString + groups.join(groupSep);
     }
 
-    performElims(elims) {
+    performElims(elims: number[]) {
         let changed = false;
         for (let elim of elims) {
             const [cellIndex, value] = this.candidateToIndexAndValue(elim);
@@ -600,7 +600,7 @@ class Board {
         return changed ? LogicResult.CHANGED : LogicResult.UNCHANGED;
     }
 
-    describeElims(elims) {
+    describeElims(elims: number[]) {
         // If all elims are for the same cell, describe it as a single cell
         const cellIndexes = new Set();
         for (let elim of elims) {
@@ -634,13 +634,13 @@ class Board {
 
     // Pass in an array of candidate indexes
     // Returns an array of candidate indexes which are eliminated by the input candidates
-    calcElimsForCandidateIndices(candidateIndexes) {
+    calcElimsForCandidateIndices(candidateIndexes: number[]) {
         if (candidateIndexes.length === 0) {
             return [];
         }
 
         // Seed the elims with the first candidate
-        let elims = Array.from(this.weakLinks[candidateIndexes[0]]);
+        let elims: number[] = Array.from(this.weakLinks[candidateIndexes[0]]);
 
         // Filter out already-eliminated candidates
         elims = elims.filter(candidateIndex => {
@@ -658,7 +658,7 @@ class Board {
         return elims;
     }
 
-    evaluateWeakLinks(cells, logicalStepDesc) {
+    evaluateWeakLinks(cells: number[], logicalStepDesc: string[]) {
         // Only allow eliminations for candidates within the cells
         const candidatesSet = new Set();
         for (let cell of cells) {
@@ -764,19 +764,19 @@ class Board {
         return this.nonGivenCount === 0 ? LogicResult.COMPLETE : changed ? LogicResult.CHANGED : LogicResult.UNCHANGED;
     }
 
-    isGiven(cellIndex) {
+    isGiven(cellIndex: number) {
         return this.cells[cellIndex] & this.givenBit;
     }
 
-    isGivenMask(cellMask) {
+    isGivenMask(cellMask: number) {
         return cellMask & this.givenBit;
     }
 
-    isGivenValue(value) {
+    isGivenValue(value: number) {
         return valueBit(value) & this.givenBit;
     }
 
-    getValue(cellIndex) {
+    getValue(cellIndex: number) {
         return minValue(this.cells[cellIndex] & ~this.givenBit);
     }
 
@@ -784,7 +784,7 @@ class Board {
         return Array.from({ length: this.size * this.size }, (_, i) => (this.isGiven(i) ? this.getValue(i) : 0));
     }
 
-    setAsGiven(cellIndex, value) {
+    setAsGiven(cellIndex: number, value: number) {
         if (!this.constraintsFinalized) {
             throw new Error('Constraints must be finalized before calling setAsGiven');
         }
@@ -836,7 +836,7 @@ class Board {
         return true;
     }
 
-    applyGivenPencilMarks(cellIndex, pencilMarks) {
+    applyGivenPencilMarks(cellIndex: number, pencilMarks: number[]) {
         const pencilMarkBits = pencilMarks.reduce((bits, value) => bits | valueBit(value), 0);
 
         if (this.cells[cellIndex] & this.givenBit || popcount(this.cells[cellIndex]) === 1) {
@@ -856,7 +856,7 @@ class Board {
         return true;
     }
 
-    findUnassignedLocation(ignoreMasks = null) {
+    findUnassignedLocation(ignoreMasks: null|number[] = null) {
         const { size, givenBit, cells } = this;
         let minCandidates = size + 1;
         let minCandidateIndex = null as null|number;
@@ -885,7 +885,7 @@ class Board {
         return minCandidateIndex;
     }
 
-    findSolution(options, isCancelled) {
+    findSolution(options: { random?: boolean }, isCancelled: () => boolean) {
         const { random = false } = options || {};
         const jobStack = [this.clone()];
         let lastCancelCheckTime = Date.now();
@@ -904,7 +904,7 @@ class Board {
                 }
             }
 
-            const currentBoard = jobStack.pop();
+            const currentBoard: Board = jobStack.pop()!;
 
             const bruteForceResult = currentBoard.applyBruteForceLogic();
 
@@ -954,7 +954,7 @@ class Board {
         reportProgress?: (count: number) => void,
         isCancelled?: () => boolean,
         solutionsSeen?: any,
-        solutionEvent?: any,
+        solutionEvent?: (board: Board) => any,
     ) {
         const jobStack = [this.clone()];
         let numSolutions = 0;
@@ -978,7 +978,7 @@ class Board {
                 lastReportTime = Date.now();
             }
 
-            const currentBoard = jobStack.pop();
+            const currentBoard: Board = jobStack.pop()!;
 
             const bruteForceResult = currentBoard.applyBruteForceLogic();
 
@@ -1051,7 +1051,7 @@ class Board {
         return { numSolutions, isCancelled: false };
     }
 
-    async calcTrueCandidates(maxSolutionsPerCandidate, isCancelled): Promise<{
+    async calcTrueCandidates(maxSolutionsPerCandidate: number, isCancelled: () => boolean): Promise<{
         invalid?: boolean
         cancelled?: boolean
         isCancelled?: boolean
@@ -1137,7 +1137,7 @@ class Board {
                     }
 
                     // Find solutions for the new board
-                    const cancelled = await newBoard.countSolutions(remainingSolutions, null, isCancelled, solutionsSeen, solutionBoard => {
+                    const { isCancelled: cancelled } = await newBoard.countSolutions(remainingSolutions, undefined, isCancelled, solutionsSeen, (solutionBoard) => {
                         // Update all candidate counts for this solution
                         for (let cellIndex = 0; cellIndex < totalCells; cellIndex++) {
                             const cellMask = solutionBoard.cells[cellIndex] & allValues;
@@ -1150,7 +1150,7 @@ class Board {
                                 attemptedCandidates[cellIndex] |= cellMask;
                             }
                         }
-                    }).isCancelled;
+                    });
 
                     if (cancelled) {
                         return { isCancelled: true };
@@ -1168,7 +1168,7 @@ class Board {
                         // This candidate is impossible
                         board.clearCellMask(cellIndex, chosenValueMask);
                         removedCandidates = true;
-                    } else {
+                    } else if (solution instanceof Board) {
                         // Mark all candidates for this solution as attempted
                         for (let cellIndex = 0; cellIndex < totalCells; cellIndex++) {
                             attemptedCandidates[cellIndex] |= solution.cells[cellIndex] & allValues;
@@ -1196,8 +1196,8 @@ class Board {
         }
     }
 
-    async logicalStep(isCancelled) {
-        const desc = [];
+    async logicalStep(isCancelled: () => boolean) {
+        const desc: string[] = [];
         let lastCancelCheckTime = Date.now();
         for (const logicalStep of this.logicalSteps) {
             if (Date.now() - lastCancelCheckTime > 100) {
@@ -1222,8 +1222,8 @@ class Board {
         return { unchanged: true };
     }
 
-    async logicalSolve(isCancelled) {
-        const desc = [] as Array<string>;
+    async logicalSolve(isCancelled: () => boolean) {
+        const desc: string[] = [];
         let lastCancelCheckTime = Date.now();
         let changed = false;
         while (true) {

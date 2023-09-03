@@ -1,3 +1,4 @@
+import type Board from "../board";
 import {
 	popcount,
 	valuesList,
@@ -7,11 +8,11 @@ import {
 import LogicalStep from "./logical-step";
 
 export default class CellForcing extends LogicalStep {
-    constructor(board) {
+    constructor(board: Board) {
         super(board, 'Cell Forcing');
     }
 
-	step(board, desc) {
+	step(board: Board, desc: string[]) {
 		const { size, allValues, cells } = board;
 		const numCells = size * size;
 		for (let numCandidates = 2; numCandidates < size; numCandidates++) {

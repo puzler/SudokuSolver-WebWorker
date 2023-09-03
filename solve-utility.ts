@@ -1,5 +1,7 @@
+import type Board from "./board";
+
 // Count the number of set bits in an integer
-export function popcount(x) {
+export function popcount(x: number) {
     x -= (x >> 1) & 0x55555555;
     x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
     x = (x + (x >> 4)) & 0x0f0f0f0f;
@@ -9,37 +11,37 @@ export function popcount(x) {
 }
 
 // Count the number of trailing zeros in an integer
-export function ctz(x) {
+export function ctz(x: number) {
     return popcount((x & -x) - 1);
 }
 
 // Computes the bitmask with all values set
-export function allValues(size) {
+export function allValues(size: number) {
 	return (1 << size) - 1;
 }
 
 // Computes the bitmask with a specific value set
-export function valueBit(value) {
+export function valueBit(value: number) {
 	return 1 << (value - 1);
 }
 
 // Get the value of the first set bit
-export function minValue(bits) {
+export function minValue(bits: number) {
 	return ctz(bits) + 1;
 }
 
 // Get the value of the last set bit
-export function maxValue(bits) {
+export function maxValue(bits: number) {
 	return 32 - Math.clz32(bits);
 }
 
 // Get if a value is set
-export function hasValue(bits, value) {
+export function hasValue(bits: number, value: number) {
 	return (bits & valueBit(value)) !== 0;
 }
 
 // Get the value of a randomly set bit
-export function randomValue(bits) {
+export function randomValue(bits: number) {
 	if (bits === 0) {
 		return 0;
 	}
@@ -58,11 +60,11 @@ export function randomValue(bits) {
 	return 0;
 }
 
-export function valuesMask(values) {
+export function valuesMask(values: number[]) {
 	return values.reduce((mask, value) => mask | valueBit(value), 0);
 }
 
-export function valuesList(mask) {
+export function valuesList(mask: number) {
 	const values = [] as Array<number>;
 	while (mask !== 0) {
 		const value = minValue(mask);
@@ -72,7 +74,7 @@ export function valuesList(mask) {
 	return values;
 }
 
-export function binomialCoefficient(n, k) {
+export function binomialCoefficient(n: number, k: number) {
 	if (k < 0 || k > n) {
 		return 0;
 	}
@@ -92,8 +94,8 @@ export function binomialCoefficient(n, k) {
 	return result;
 }
 
-export function* combinations(array, size) {
-    function* combine(start, prefix) {
+export function* combinations(array: any[], size: number) {
+    function* combine(start: number, prefix: any[]): any {
         if (prefix.length === size) {
             yield prefix;
         } else {
@@ -105,8 +107,8 @@ export function* combinations(array, size) {
     yield* combine(0, []);
 };
 
-export function* permutations(array) {
-    function* permute(list, i) {
+export function* permutations(array: any[]) {
+    function* permute(list: any[], i: number): any {
         if (i + 1 === list.length) {
             yield list;
         } else {
@@ -121,23 +123,23 @@ export function* permutations(array) {
 };
 
 // Helper for memo keys
-export function cellsKey(prefix, cells, size) {
+export function cellsKey(prefix: any, cells: number[], size: number) {
 	return prefix + appendCellNames(cells, size);
 }
 
-export function appendInts(ints) {
+export function appendInts(ints: number[]): string {
 	return ints.map(i => '|' + i).join('');
 }
 
-export function appendCellNames(cells, size) {
+export function appendCellNames(cells: number[], size: number): string {
 	return cells.map(cell => '|' + cellName(cell, size)).join('');
 }
 
-export function maskToString(mask, size) {
+export function maskToString(mask: number, size: number): string {
 	return valuesList(mask).join(size >= 10 ? ',' : '');
 }
 
-export function appendCellValueKey(board, cells) {
+export function appendCellValueKey(board: Board, cells: number[]) {
 	let builder = '';
 	cells.forEach(cellIndex => {
 		const mask = board.cells[cellIndex];
@@ -146,13 +148,13 @@ export function appendCellValueKey(board, cells) {
 	return builder;
 }
 
-export function cellName (cellIndex, size) {
+export function cellName (cellIndex: number, size: number) {
     const row = Math.floor(cellIndex / size);
     const col = cellIndex % size;
     return `R${row + 1}C${col + 1}`;
 };
 
-export function sequenceEqual(arr1, arr2) {
+export function sequenceEqual(arr1: any[], arr2: any[]) {
     if (arr1.length !== arr2.length) {
         return false;
     }
@@ -161,7 +163,7 @@ export function sequenceEqual(arr1, arr2) {
 }
 
 // Assumes arr is sorted
-export function removeDuplicates(arr) {
+export function removeDuplicates(arr: any[]) {
     if (!arr.length) {
         return arr;
     }
