@@ -125,7 +125,7 @@ function defineBoard(data: { definition: string }) {
             data.definition,
             (_, value) => {
                 if (typeof value === 'object' && value.encodedFunc === true) {
-                    return new Function('return' + value.func)()
+                    return new Function(`return ${value.func}`)()
                 }
 
                 return value
