@@ -6,24 +6,15 @@ import SumCellsHelper from "../sum-cells-helper";
 import Constraint, { ConstraintResult } from "./constraint";
 
 export default class KillerCageConstraint extends Constraint {
-    constructor(board: Board, params: { cells: any[], value?: string | number }) {
+    constructor(board: Board, params: { cells: any[], value: number }) {
         const cells = params.cells.map(cellAddress => cellIndexFromAddress(cellAddress, board.size));
         const specificName =
-            typeof params.value === 'number' && params.value > 0
+            params.value > 0
                 ? `Killer Cage ${params.value} at ${cellName(cells[0], board.size)}`
                 : `Killer Cage at ${cellName(cells[0], board.size)}`;
         super(board, 'Killer Cage', specificName);
 
-        if (typeof params.value === 'string') {
-            const value = parseInt(params.value, 10);
-            if (isNaN(value) || value < 0) {
-                this.sum = 0;
-            } else {
-                this.sum = value;
-            }
-        } else {
-            this.sum = 0;
-        }
+        this.sum = params.value
         this.cells = cells.sort((a, b) => a - b);
         this.cellsSet = new Set(this.cells);
     }
@@ -151,5 +142,28 @@ export default class KillerCageConstraint extends Constraint {
 }
 
 export function register() {
-    registerConstraint('killercage', (board, params) => new KillerCageConstraint(board, params));
+    registerConstraint(
+        'killercage',
+        (board, params, definition) => {
+            const cells = definition?.cells ? definition.cells(params) : params.cells
+            let value = definition?.value ? definition.value(params) : params.value
+
+            if (!value) {
+                value = 0
+            } else if (typeof value === 'string') {
+                value = parseInt(value, 10)
+                if (isNaN(value) || value < 0) {
+                    value = 0
+                }
+            }
+
+            return new KillerCageConstraint(
+                board,
+                {
+                    cells,
+                    value,
+                },
+            )
+        },
+    );
 }

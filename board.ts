@@ -26,6 +26,13 @@ export const LogicResult = Object.freeze({
     COMPLETE: 3,
 });
 
+export type Region = {
+    cells: number[]
+    name: string
+    fromConstraint: null|Constraint
+    type: string
+}
+
 class Board {
     constructor(size: number) {
         this.size = size;
@@ -55,7 +62,7 @@ class Board {
     nonGivenCount: any
     nakedSingles: any
     weakLinks: any
-    regions: { cells: number[], name: string, fromConstraint: null|Constraint, type: string }[]
+    regions: Region[]
     constraints: Constraint[]
     constraintsFinalized: boolean
     memos: Record<any, any>

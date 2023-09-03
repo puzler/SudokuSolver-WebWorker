@@ -1,4 +1,4 @@
-import type Board from "../board";
+import Board, { type Region } from "../board";
 import { registerConstraint } from "../constraint-builder";
 import { cellName, minValue, valueBit } from "../solve-utility";
 import { cellIndexFromAddress } from "../solve-worker";
@@ -25,7 +25,7 @@ class RegionSumLinesConstraint extends Constraint {
             // Split cells into segments
             this.segments = [];
             let currentSegment = [] as Array<any>;
-            let currentRegion = null;
+            let currentRegion: null|Region = null;
             for (const cell of this.cells) {
                 const cellRegions = board.getRegionsForCell(cell, 'region');
                 if (cellRegions.length === 0) {
@@ -111,7 +111,7 @@ class RegionSumLinesConstraint extends Constraint {
 			return ConstraintResult.INVALID;
 		}
 
-		let origMasks = null;
+		let origMasks: null|number[] = null;
 		if (logicalStepDescription) {
 			origMasks = this.cells.map(cell => board.cells[cell]);
 		}
@@ -178,11 +178,11 @@ class RegionSumLinesConstraint extends Constraint {
 
 export function register() {
     registerConstraint(
-        'regionSumLines',
+        'regionsumline',
         (board, params, definition) => {
             const lines = definition?.lines ? definition.lines(params) : params.lines
             return lines.map(
-                (line: any[]) => new RegionSumLinesConstraint(board, { cells: line })
+                (cells: any[]) => new RegionSumLinesConstraint(board, { cells })
             )
         },
     );

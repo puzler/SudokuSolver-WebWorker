@@ -449,17 +449,17 @@ export default class ArrowSumConstraint extends Constraint {
 
 export function register() {
     registerConstraint('arrow', (board, params, definition) => {
-        const constraints = [] as Array<ArrowSumConstraint>;
         const lines = definition?.lines ? definition.lines(params) : params.lines
         const circleCells = definition?.circleCells ? definition.circleCells(params) : params.cells
 
-        for (let line of lines) {
-            const arrowParams = {
-                circleCells,
-                arrowCells: line.slice(1),
-            };
-            constraints.push(new ArrowSumConstraint(board, arrowParams));
-        }
-        return constraints;
+        return lines.map(
+            (line) => new ArrowSumConstraint(
+                board,
+                {
+                    circleCells,
+                    arrowCells: line.slice(1),
+                },
+            ),
+        );
     })
 }

@@ -54,6 +54,21 @@ export type BoardDefinition = {
             cells?: (instance: any) => any[]
             negative?: (boardData: any) => boolean
         }
+        littlekillersum?: {
+            collector?: (boardData: any) => undefined|null|any[]
+            value?: (instance: any) => any
+            clueCellName?: (instance: any) => string
+            cells?: (instance: any) => any[]
+        }
+        killercage?: {
+            collector?: (boardData: any) => undefined|null|any[]
+            cells?: (instance: any) => any[]
+            value?: (instance: any) => undefined|null|string|number
+        }
+        regionsumline?: {
+            collector?: (boardData: any) => undefined|null|any[]
+            lines?: (instance: any) => any[][]
+        }
     }
     indexForAddress?: (address: any, size: number) => number
 };
