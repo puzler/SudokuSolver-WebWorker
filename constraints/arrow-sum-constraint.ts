@@ -453,7 +453,7 @@ export function register() {
         const circleCells = definition?.circleCells ? definition.circleCells(params) : params.cells
 
         return lines.map(
-            (line) => new ArrowSumConstraint(
+            (line: any[]) => new ArrowSumConstraint(
                 board,
                 {
                     circleCells,
