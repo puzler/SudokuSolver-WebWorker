@@ -305,6 +305,7 @@ async function logicalSolve(data: { board: any }) {
 };
 
 function gridFor(boardData: any) {
+    console.log('getting grid', boardData, boardDefinition)
     if (boardDefinition.grid?.cells) {
         const grid = boardDefinition.grid.cells(boardData)
         return grid
