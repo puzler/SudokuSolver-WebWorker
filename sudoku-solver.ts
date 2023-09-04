@@ -1,9 +1,9 @@
-import {
+import type {
   BoardDefinition,
   CandidatesList,
   SolverConstructor,
   CellDataParam,
-} from "./types"
+} from './types'
 export type { BoardDefinition, CellDataParam }
 
 class SudokuSolver {
@@ -13,6 +13,7 @@ class SudokuSolver {
   cancelTimeoutCheck = false
 
   constructor(args: SolverConstructor) {
+    console.log('Initializing Solver Interface')
     this.onSolution = args.onSolution
     this.onInvalid = args.onInvalid
     this.onCancelled = args.onCancelled
@@ -27,9 +28,10 @@ class SudokuSolver {
   }
 
   private setupWorker() {
+    console.log('Setting up worker')
     this.worker = new Worker(
-      new URL('./solve-worker', import.meta.url),
-      { type: 'module' }
+      new URL('./solve-worker.ts', import.meta.url),
+      { type: 'module' },
     )
 
     if (!this.worker) return
