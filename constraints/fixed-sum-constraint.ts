@@ -41,7 +41,7 @@ export default class FixedSumConstraint extends Constraint {
             const [cell1, cell2] = this.cells;
             const valueUsed1 = Array.from({ length: this.size + 1 }, () => false);
             const valueUsed2 = Array.from({ length: this.size + 1 }, () => false);
-            for (let value1 = 1; value1 <= this.size; value1++) {
+            for (let value1 = 1; value1 <= this.size; value1 += 1) {
                 if (!hasValue(board.cells[cell1], value1)) {
                     continue;
                 }
@@ -67,22 +67,21 @@ export default class FixedSumConstraint extends Constraint {
                         valueUsed2[value2] = true;
                     }
                 }
+            }
 
-                // Only keep candidates used by the sum
-                const valueUsedMask1 = valueUsed1.reduce((mask, used, value) => (used ? mask | valueBit(value) : mask), 0);
-                const valueUsedMask2 = valueUsed2.reduce((mask, used, value) => (used ? mask | valueBit(value) : mask), 0);
-                const result1 = board.keepCellMask(cell1, valueUsedMask1);
-                const result2 = board.keepCellMask(cell2, valueUsedMask2);
+            // Only keep candidates used by the sum
+            const valueUsedMask1 = valueUsed1.reduce((mask, used, value) => (used ? mask | valueBit(value) : mask), 0);
+            const valueUsedMask2 = valueUsed2.reduce((mask, used, value) => (used ? mask | valueBit(value) : mask), 0);
+            const result1 = board.keepCellMask(cell1, valueUsedMask1);
+            const result2 = board.keepCellMask(cell2, valueUsedMask2);
 
-                if (result1 === ConstraintResult.INVALID || result2 === ConstraintResult.INVALID) {
-                    return ConstraintResult.INVALID;
-                }
 
-                if (result1 === ConstraintResult.CHANGED || result2 === ConstraintResult.CHANGED) {
-                    return ConstraintResult.CHANGED;
-                }
+            if (result1 === ConstraintResult.INVALID || result2 === ConstraintResult.INVALID) {
+                return ConstraintResult.INVALID;
+            }
 
-                return ConstraintResult.UNCHANGED;
+            if (result1 === ConstraintResult.CHANGED || result2 === ConstraintResult.CHANGED) {
+                return ConstraintResult.CHANGED;
             }
 
             return ConstraintResult.UNCHANGED;
@@ -131,9 +130,9 @@ export function register() {
             return [];
         }
 
-        const clueCellName = definition?.clueCellName ? definition.clueCellName(params, board.size) : params.cell;
+        const clueCellName = definition?.clueCellName ? definition.clueCellName(params) : params.cell;
         const lkParams = {
-            cells: definition?.cells ? definition.cells(params) : params.cells,
+            cells: definition?.cells ? definition.cells(params, board.size) : params.cells,
             sum: typeof value === 'string' ? parseInt(value, 10) : value,
         };
 
