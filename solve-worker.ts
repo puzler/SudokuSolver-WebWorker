@@ -58,7 +58,7 @@ export type BoardDefinition = {
             collector?: (boardData: any) => undefined|null|any[]
             value?: (instance: any) => any
             clueCellName?: (instance: any) => string
-            cells?: (instance: any) => any[]
+            cells?: (instance: any, boardData: any) => any[]
         }
         killercage?: {
             collector?: (boardData: any) => undefined|null|any[]

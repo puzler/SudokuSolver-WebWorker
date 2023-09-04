@@ -131,7 +131,7 @@ export function register() {
             return [];
         }
 
-        const clueCellName = definition?.clueCellName ? definition.clueCellName(params) : params.cell;
+        const clueCellName = definition?.clueCellName ? definition.clueCellName(params, board.size) : params.cell;
         const lkParams = {
             cells: definition?.cells ? definition.cells(params) : params.cells,
             sum: typeof value === 'string' ? parseInt(value, 10) : value,
