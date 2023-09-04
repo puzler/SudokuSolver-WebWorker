@@ -4,7 +4,7 @@
 // registerConstraint("killercage", (board, params) => new KillerCageConstraint(board, params));
 import Constraint from './constraints/constraint'
 import Board from './board';
-import type { BoardDefinition } from './solve-worker';
+import type { BoardDefinition } from './types';
 
 const constraintBuilder = {} as Record<string, (board: Board, params: any, definition?: any) => Constraint|Constraint[]>;
 const aggregateConstraintBuilders = [] as Array<(board: Board, boardData: any, definition: BoardDefinition) => Constraint|Constraint[]>;
