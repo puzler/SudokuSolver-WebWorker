@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/charliepugh92/SudokuSolver-WebWorker.git"
+    "url": "git+https://github.com/puzler/SudokuSolver-WebWorker.git"
   },
   "keywords": [
     "sudoku",
@@ -19,7 +19,7 @@
   "author": "Puzler, adapted from SudokuSolver-WebWorker from @dclamage",
   "license": "LGPL-2.1-or-later",
   "bugs": {
-    "url": "https://github.com/charliepugh92/SudokuSolver-WebWorker/issues"
+    "url": "https://github.com/puzler/SudokuSolver-WebWorker/issues"
   },
-  "homepage": "https://github.com/charliepugh92/SudokuSolver-WebWorker#readme"
+  "homepage": "https://github.com/puzler/SudokuSolver-WebWorker#readme"
 }
