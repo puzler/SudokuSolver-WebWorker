@@ -325,7 +325,7 @@ export function register() {
             }
             instancesByValue[instance.value].push(instance);
         }
-    
+
         const hasNegative = definition?.negative ? definition.negative(boardData) : (Array.isArray(boardData.negative) && boardData.negative.includes('xv'));
 
         if (typeof hasNegative === 'boolean') {
@@ -347,13 +347,24 @@ export function register() {
             const instances = instancesByValue[value];
             const numValue = Number(value);
             const isAllowed = (value1: number, value2: number) => value1 + value2 === numValue;
-            const negativePairsGenerator = hasNegative ? orthogonalPairsGenerator : null;
+
+            const negativeValue = typeof hasNegative === 'boolean' ? hasNegative : hasNegative[value === '10' ? 'x' : 'v']
+            const negativePairsGenerator = negativeValue ? orthogonalPairsGenerator : null;
+
             const params = {
                 cellsPairs: instances.map(
                     (instance: any) => definition?.cells ? definition.cells(instance) : instance.cells
                 ),
             };
-            const constraint = new GeneralCellPairConstraint('XV', `XV`, 'sum', isAllowed, negativePairsGenerator, board, params);
+            const constraint = new GeneralCellPairConstraint(
+                'XV',
+                `XV`,
+                'sum',
+                isAllowed,
+                negativePairsGenerator,
+                board,
+                params,
+            );
             constraints.push(constraint);
         }
         return constraints;
