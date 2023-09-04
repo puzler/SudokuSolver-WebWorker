@@ -1,5 +1,5 @@
 {
-  "name": "@charliepugh92/sudokusolver-webworker",
+  "name": "@puzler/sudokusolver-webworker",
   "version": "0.0.1",
   "description": "A webworker plugin that acts as a solver for variant sudoku puzzles",
   "main": "solve-worker.ts",
@@ -16,7 +16,7 @@
     "webworker",
     "javascript"
   ],
-  "author": "charliepugh92",
+  "author": "Puzler, adapted from SudokuSolver-WebWorker from @dclamage",
   "license": "LGPL-2.1-or-later",
   "bugs": {
     "url": "https://github.com/charliepugh92/SudokuSolver-WebWorker/issues"
