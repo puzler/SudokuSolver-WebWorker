@@ -1,6 +1,18 @@
 import Board from './board'
 import { buildConstraints } from './constraint-builder';
 import registerAllConstraints from './constraint-registry';
+import type {
+    BoardDefinition,
+    CandidatesList,
+    SolverConstructor,
+    CellDataParam,
+} from './types'
+export type {
+    BoardDefinition,
+    CellDataParam, 
+    CandidatesList,
+    SolverConstructor,
+}
 
 import {
     minValue,
@@ -8,7 +20,6 @@ import {
     valuesList,
     valuesMask,
 } from './solve-utility'
-import type { BoardDefinition, CellDataParam } from './sudoku-solver';
 
 registerAllConstraints()
 let eventCanceled = false;

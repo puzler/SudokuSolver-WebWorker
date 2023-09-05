@@ -1,9 +1,8 @@
 {
   "name": "@puzler/sudokusolver-webworker",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A webworker plugin that acts as a solver for variant sudoku puzzles",
-  "main": "sudoku-solver.ts",
-  "types": "sudoku-solver.d.ts",
+  "main": "solve-worker.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
