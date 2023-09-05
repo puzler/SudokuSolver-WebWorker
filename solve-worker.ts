@@ -4,14 +4,12 @@ import registerAllConstraints from './constraint-registry';
 import type {
     BoardDefinition,
     CandidatesList,
-    SolverConstructor,
     CellDataParam,
 } from './types'
 export type {
     BoardDefinition,
     CellDataParam, 
     CandidatesList,
-    SolverConstructor,
 }
 
 import {

@@ -63,15 +63,3 @@ export type BoardDefinition = {
 }
 
 export type CandidatesList = Array<Array<number>|{ given: boolean; value: number }>
-
-export type SolverConstructor = {
-  onSolution?: (solution: Array<number>) => void
-  onInvalid?: () => void
-  onCancelled?: () => void
-  onNoSolution?: () => void
-  onCount?: (count: number, complete: boolean, cancelled?: boolean) => void
-  onTrueCandidates?: (candidates: CandidatesList, counts: any) => void
-  onStep?: (desc: string, invalid: boolean, changed: boolean, candidates?: CandidatesList) => void
-  onLogicalSolve?: (desc: Array<string>, invalid: boolean, changed: boolean, candidates?: CandidatesList) => void
-  boardDefinition?: BoardDefinition
-}
