@@ -308,6 +308,21 @@ class Board {
         return valid;
     }
 
+    seenCells(cell: number) {
+        return this.regions.reduce(
+            (cells, region) => {
+                if (!region.cells.includes(cell)) return cells
+                return [
+                    ...cells,
+                    ...region.cells.filter(
+                        (check) => check !== cell && !cells.includes(check)
+                    ),
+                ]
+            },
+            [] as number[]
+        )
+    }
+
     isGroup(cells: number[]) {
         for (let i0 = 0; i0 < cells.length - 1; i0++) {
             const cell0 = cells[i0];
@@ -665,7 +680,7 @@ class Board {
         return elims;
     }
 
-    evaluateWeakLinks(cells: number[], logicalStepDesc: string[]) {
+    evaluateWeakLinks(cells: number[], logicalStepDesc: null|string[]) {
         // Only allow eliminations for candidates within the cells
         const candidatesSet = new Set();
         for (let cell of cells) {

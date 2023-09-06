@@ -3,6 +3,8 @@ import { register as registerArrowConstraint } from './constraints/arrow-sum-con
 import { register as registerRegionSumLineConstraint } from './constraints/region-sum-lines-constraint'
 import { register as registerFixedSumConstraint } from './constraints/fixed-sum-constraint'
 import { register as registerGeneralCellPairConstraints } from './constraints/general-cell-pair-constraint'
+import { register as registerExtraRegionConstraints } from './constraints/extra-region-constraint'
+import { register as registerEqualCellsConstraints } from './constraints/equal-cells-contraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -10,4 +12,6 @@ export default function registerAllConstraints() {
   registerRegionSumLineConstraint()
   registerFixedSumConstraint()
   registerGeneralCellPairConstraints()
+  registerExtraRegionConstraints()
+  registerEqualCellsConstraints()
 }

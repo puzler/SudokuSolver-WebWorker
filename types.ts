@@ -14,6 +14,14 @@ export type BoardDefinition = {
       cellIsGiven?: (cellDataParam: CellDataParam) => boolean
   }
   constraints?: {
+      antiking?: (boardData: any) => undefined|null|boolean
+      antiknight?: (boardData: any) => undefined|null|boolean
+      'diagonal+'?: (boardData: any) => undefined|null|boolean
+      'diagonal-'?: (boardData: any) => undefined|null|boolean
+      disjointgroups?: (boardData: any) => undefined|null|boolean
+      extraregion?: {
+        collector?: (boardData: any) => undefined|null|any[]
+      }
       arrow?: {
           collector?: (boardData: any) => undefined|null|any[]
           circleCells?: (arrow: any) => Array<any>
@@ -57,6 +65,14 @@ export type BoardDefinition = {
       regionsumline?: {
           collector?: (boardData: any) => undefined|null|any[]
           lines?: (instance: any) => any[][]
+      }
+      palindrome?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        lines?: (instance: any) => any[][]
+      }
+      clone?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cloneGroups?: (instance: any) => any[][]
       }
   }
   indexForAddress?: (address: any, size: number) => number
