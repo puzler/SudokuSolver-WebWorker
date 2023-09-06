@@ -5,6 +5,7 @@ import { register as registerFixedSumConstraint } from './constraints/fixed-sum-
 import { register as registerGeneralCellPairConstraints } from './constraints/general-cell-pair-constraint'
 import { register as registerExtraRegionConstraints } from './constraints/extra-region-constraint'
 import { register as registerEqualCellsConstraints } from './constraints/equal-cells-constraint'
+import { register as registerSingleCellMaskConstraints } from './constraints/single-cell-mask-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -14,4 +15,5 @@ export default function registerAllConstraints() {
   registerGeneralCellPairConstraints()
   registerExtraRegionConstraints()
   registerEqualCellsConstraints()
+  registerSingleCellMaskConstraints()
 }

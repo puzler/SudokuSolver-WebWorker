@@ -74,6 +74,14 @@ export type BoardDefinition = {
         collector?: (boardData: any) => undefined|null|any[]
         cloneGroups?: (instance: any) => any[][]
       }
+      even?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cell?: (instance: any) => any
+      }
+      odd?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cell?: (instance: any) => any
+      }
   }
   indexForAddress?: (address: any, size: number) => number
 }
