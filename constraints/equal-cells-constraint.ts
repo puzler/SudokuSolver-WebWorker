@@ -1,7 +1,7 @@
 import type Board from '../board'
 import Constraint, { ConstraintResult } from './constraint'
 import { cellIndexFromAddress } from '../solve-worker'
-import { cellName, combinations, hasValue, maskToString, valueBit } from '../solve-utility'
+import { cellName, combinations, hasValue } from '../solve-utility'
 import { registerConstraint } from '../constraint-builder'
 
 export default class EqualCellsConstraint extends Constraint {
@@ -44,7 +44,7 @@ export default class EqualCellsConstraint extends Constraint {
       return true
     }
 
-    const possibleMask = this.cells.reduce((mask, cell) => mask & board.cells[cell], board.allValues())
+    const possibleMask = this.cells.reduce((mask, cell) => mask & board.cells[cell], board.allValues)
     if (possibleMask === 0) return false
 
     return true
@@ -53,7 +53,7 @@ export default class EqualCellsConstraint extends Constraint {
   logicStep(board: Board, logicalStepDesc: null|string[]) {
     const newMask = this.cells.reduce(
       (mask, cell) => mask & board.cells[cell], board.allValues,
-    ) & ~board.givenBit
+    )
 
     if (newMask === 0) {
       logicalStepDesc?.push(`${this.specificName} has no possible values`)
@@ -64,7 +64,7 @@ export default class EqualCellsConstraint extends Constraint {
 
     for (let cell of this.cells) {
       const cellMask = board.cells[cell] & ~board.givenBit
-      if (cellMask === newMask) continue
+      if (cellMask === (newMask & ~board.givenBit)) continue
 
       if (logicalStepDesc) {
         const removedValues = cellMask & ~newMask
@@ -76,9 +76,7 @@ export default class EqualCellsConstraint extends Constraint {
       results.push(board.keepCellMask(cell, newMask))
     }
 
-    if (results.some((res) => res === ConstraintResult.INVALID)) return ConstraintResult.INVALID
-    if (results.some((res) => res === ConstraintResult.CHANGED)) return ConstraintResult.CHANGED
-    return ConstraintResult.UNCHANGED
+    return Math.max(...results) as 0|1|2
   }
 
   getGivenVals(board: Board) {

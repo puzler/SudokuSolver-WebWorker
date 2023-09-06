@@ -4,7 +4,7 @@ import { register as registerRegionSumLineConstraint } from './constraints/regio
 import { register as registerFixedSumConstraint } from './constraints/fixed-sum-constraint'
 import { register as registerGeneralCellPairConstraints } from './constraints/general-cell-pair-constraint'
 import { register as registerExtraRegionConstraints } from './constraints/extra-region-constraint'
-import { register as registerEqualCellsConstraints } from './constraints/equal-cells-contraint'
+import { register as registerEqualCellsConstraints } from './constraints/equal-cells-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
