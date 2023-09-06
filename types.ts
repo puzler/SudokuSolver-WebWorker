@@ -82,6 +82,14 @@ export type BoardDefinition = {
         collector?: (boardData: any) => undefined|null|any[]
         cell?: (instance: any) => any
       }
+      minimum?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cell?: (instance: any) => any
+      }
+      maximum?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cell?: (instance: any) => any
+      }
   }
   indexForAddress?: (address: any, size: number) => number
 }

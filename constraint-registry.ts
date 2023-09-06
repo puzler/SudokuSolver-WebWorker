@@ -6,6 +6,7 @@ import { register as registerGeneralCellPairConstraints } from './constraints/ge
 import { register as registerExtraRegionConstraints } from './constraints/extra-region-constraint'
 import { register as registerEqualCellsConstraints } from './constraints/equal-cells-constraint'
 import { register as registerSingleCellMaskConstraints } from './constraints/single-cell-mask-constraint'
+import { register as registerInequalityConstraints } from './constraints/inequality-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -16,4 +17,5 @@ export default function registerAllConstraints() {
   registerExtraRegionConstraints()
   registerEqualCellsConstraints()
   registerSingleCellMaskConstraints()
+  registerInequalityConstraints()
 }
