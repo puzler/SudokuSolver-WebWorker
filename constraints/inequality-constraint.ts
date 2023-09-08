@@ -112,7 +112,6 @@ export function register() {
         [] as InequalityConstraint[],
       )
 
-      console.log(list)
       return list
     }
   )
