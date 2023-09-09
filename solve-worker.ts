@@ -13,6 +13,7 @@ export type {
 }
 
 import {
+    maskToString,
     minValue,
     valueBit,
     valuesList,
@@ -178,7 +179,7 @@ function candidatesDiffer(board: Board, data: { board: any }) {
             const cellDataParams = { cell: dataCell, row: i, column: j, boardData: data.board }
             const cellValue  = valueFor(cellDataParams)
 
-            let dataCellMask = board.allValues;
+            let dataCellMask = 0;
             if (cellValue) {
                 dataCellMask = valueBit(cellValue);
             } else {

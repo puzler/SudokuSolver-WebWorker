@@ -116,7 +116,7 @@ class Board {
     }
 
     maskStrictlyHigher(v: number) {
-        return this.allValues ^ (1 << (v - 1));
+        return this.allValues ^ this.maskLowerOrEqual(v);
     }
 
     maskLowerOrEqual(v: number) {
@@ -124,7 +124,7 @@ class Board {
     }
 
     maskHigherOrEqual(v: number) {
-        return this.allValues ^ ((1 << v) - 1);
+        return this.allValues ^ this.maskStrictlyLower(v);
     }
 
     maskBetweenInclusive(v1: number, v2: number) {
@@ -132,7 +132,7 @@ class Board {
     }
 
     maskBetweenExclusive(v1: number, v2: number) {
-        return this.maskHigherOrEqual(v1) & this.maskStrictlyLower(v2);
+        return this.maskStrictlyHigher(v1) & this.maskStrictlyLower(v2);
     }
 
     addWeakLink(index1: number, index2: number) {

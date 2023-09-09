@@ -9,6 +9,7 @@ import { register as registerSingleCellMaskConstraints } from './constraints/sin
 import { register as registerInequalityConstraints } from './constraints/inequality-constraint'
 import { register as registerWhisperConstraints } from './constraints/whisper-line-constraint'
 import { register as registerBetweenLineConstraints } from './constraints/between-lines-constraint'
+import { register as registerRenbanLineConstraints } from './constraints/renban-lines-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -22,4 +23,5 @@ export default function registerAllConstraints() {
   registerInequalityConstraints()
   registerWhisperConstraints()
   registerBetweenLineConstraints()
+  registerRenbanLineConstraints()
 }
