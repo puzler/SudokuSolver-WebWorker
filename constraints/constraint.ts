@@ -38,17 +38,17 @@ export default class Constraint {
     allValues: any
     givenBit: number
     cellIndex: (row: number, col: number) => number
-    cellCoords
-    candidateIndexRC
-    candidateIndex
-    cellIndexFromCandidate
-    valueFromCandidate
-    maskStrictlyLower
-    maskStrictlyHigher
-    maskLowerOrEqual
-    maskHigherOrEqual
-    maskBetweenInclusive
-    maskBetweenExclusive
+    cellCoords: (cellIndex: number) => number[]
+    candidateIndexRC: (row: number, col: number, value: number) => number
+    candidateIndex: (cellIndex: number, value: number) => number
+    cellIndexFromCandidate: (candidateIndex: number) => number
+    valueFromCandidate: (candidateIndex: number) => number
+    maskStrictlyLower: (v: number) => number
+    maskStrictlyHigher: (v: number) => number
+    maskLowerOrEqual: (v: number) => number
+    maskHigherOrEqual: (v: number) => number
+    maskBetweenInclusive: (v1: number, v2: number) => number
+    maskBetweenExclusive: (v1: number, v2: number) => number
 
     // Returns the name of the constraint
     toString() {

@@ -90,6 +90,18 @@ export type BoardDefinition = {
         collector?: (boardData: any) => undefined|null|any[]
         cell?: (instance: any) => any
       }
+      germanwhispers?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        lines?: (instance: any) => any[][]
+      }
+      dutchwhispers?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        lines?: (instance: any) => any[][]
+      }
+      betweenline?: {
+        collector?: (boardData: any) => undefined|null|any[],
+        lines?: (instance: any) => any[][]
+      }
   }
   indexForAddress?: (address: any, size: number) => number
 }

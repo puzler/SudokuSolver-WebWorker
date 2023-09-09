@@ -56,7 +56,7 @@ class Board {
     }
 
     size: number
-    allValues: any
+    allValues: number
     givenBit: number
     cells: number[]
     nonGivenCount: any

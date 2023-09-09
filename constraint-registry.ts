@@ -7,6 +7,8 @@ import { register as registerExtraRegionConstraints } from './constraints/extra-
 import { register as registerEqualCellsConstraints } from './constraints/equal-cells-constraint'
 import { register as registerSingleCellMaskConstraints } from './constraints/single-cell-mask-constraint'
 import { register as registerInequalityConstraints } from './constraints/inequality-constraint'
+import { register as registerWhisperConstraints } from './constraints/whisper-line-constraint'
+import { register as registerBetweenLineConstraints } from './constraints/between-lines-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -18,4 +20,6 @@ export default function registerAllConstraints() {
   registerEqualCellsConstraints()
   registerSingleCellMaskConstraints()
   registerInequalityConstraints()
+  registerWhisperConstraints()
+  registerBetweenLineConstraints()
 }
