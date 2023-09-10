@@ -1,6 +1,6 @@
 import type Board from "../board";
 import { registerAggregateConstraint } from "../constraint-builder";
-import { hasValue, valueBit } from "../solve-utility";
+import { cellName, hasValue, maskToString, popcount, valueBit, valuesList } from "../solve-utility";
 import { cellIndexFromAddress } from "../solve-worker";
 import Constraint, { ConstraintResult } from "./constraint";
 
@@ -148,6 +148,138 @@ export default class GeneralCellPairConstraint extends Constraint {
         }
 
         return changed ? ConstraintResult.CHANGED : ConstraintResult.UNCHANGED;
+    }
+
+    logicStep(board: Board, logicStepDescription: null|string[]) {
+        for (let [cell1, cell2] of this.cellPairs) {
+            if (board.isGiven(cell1)) continue
+            if (board.isGiven(cell2)) continue
+
+            let newCell1Mask = board.givenBit
+            let newCell2Mask = board.givenBit
+            let pairMustContain = null as null|number
+            for (let value1 = 1; value1 <= board.size; value1 += 1) {
+                if (!hasValue(board.cells[cell1], value1)) continue
+                const candidate1 = board.candidateIndex(cell1, value1)
+                for (let value2 = 1; value2 <= board.size; value2 += 1) {
+                    if (!hasValue(board.cells[cell2], value2)) continue
+                    const candidate2 = board.candidateIndex(cell2, value2)
+                    if (board.isWeakLink(candidate1, candidate2)) continue
+                    if (!this.isPairAllowed(value1, value2)) continue
+
+                    if (pairMustContain === null) pairMustContain = this.allValues
+
+                    pairMustContain! &= valueBit(value1) | valueBit(value2)
+                    newCell1Mask |= valueBit(value1)
+                    newCell2Mask |= valueBit(value2)
+                }
+            }
+
+            const clearedValues = Array.from({ length: 2 }, () => 0)
+            for (let i = 0; i < 2; i += 1) {
+                const cell = i === 0 ? cell1 : cell2
+                const clearMask = i === 0 ? ~newCell1Mask : ~newCell2Mask
+                if ((board.cells[cell] & clearMask) === 0) continue
+
+                const clearedCellValues = board.cells[cell] & clearMask
+                const result = board.clearCellMask(cell, clearMask)
+                if (result === ConstraintResult.INVALID) {
+                    logicStepDescription?.push(
+                    `${cellName(cell, board.size)} has no remaining values that satisfy the ${this.constraintName} constraint. Board is invalid!`
+                    )
+                    return ConstraintResult.INVALID
+                }
+
+                if (result === ConstraintResult.CHANGED) {
+                    clearedValues[i] = clearedCellValues
+                }
+            }
+            if (clearedValues.some((mask) => mask !== 0)) {
+                const removedValuesStr = clearedValues.reduce(
+                    (strs, removedMask, cellIndex) => {
+                        if (removedMask === 0) return strs
+                        return [
+                            ...strs,
+                            `${maskToString(removedMask, board.size)} from ${cellName(cellIndex === 0 ? cell1 : cell2, board.size)}`,
+                        ]
+                    },
+                    [] as string[],
+                ).join(', ')
+
+                logicStepDescription?.push(
+                    `${this.constraintName} at ${cellName(cell1, board.size)},${cellName(cell2, board.size)} removed values ${removedValuesStr}`
+                )
+
+                return ConstraintResult.CHANGED
+            }
+
+            if (pairMustContain === null) {
+                logicStepDescription?.push(`${this.constraintName} at ${cellName(cell1, board.size)},${cellName(cell2, board.size)} has no valid pairs. Board is invalid!`)
+                return ConstraintResult.INVALID
+            }
+
+            const requiredValueCount = popcount(pairMustContain & ~board.givenBit)
+            if (requiredValueCount === 0) continue
+            if (requiredValueCount == 2) {
+                const cellsMask = board.cells[cell1] | board.cells[cell2]
+                const clearMask = ~pairMustContain & ~board.givenBit
+                if ((clearMask & cellsMask) === 0) continue
+                logicStepDescription?.push(
+                    `${this.constraintName} at ${cellName(cell1, board.size)},${cellName(cell2, board.size)} must be exactly ${maskToString(pairMustContain, board.size)}`
+                )
+
+                const results = [
+                    board.keepCellMask(cell1, pairMustContain),
+                    board.keepCellMask(cell2, pairMustContain),
+                ]
+
+                const invalidIndex = results.indexOf(ConstraintResult.INVALID)
+                if (invalidIndex >= 0) {
+                    const invalidCell = invalidIndex === 0 ? cell1 : cell2
+                    logicStepDescription?.push(
+                        `, ${cellName(invalidCell, board.size)} has no valid candidates. Board is invalid!`
+                    )
+                    return ConstraintResult.INVALID
+                }
+
+                if (results.some((res) => res === ConstraintResult.CHANGED)) {
+                    return ConstraintResult.CHANGED
+                }
+            }
+
+            const cell1Seen = board.seenCells(cell1)
+            const cell2Seen = new Set(board.seenCells(cell2))
+
+            const seenByBoth = cell1Seen.filter(
+                (cell) => cell2Seen.has(cell)
+            )
+            if (seenByBoth.length === 0) continue
+
+            const seenCellMasks = seenByBoth.reduce((mask, cell) => mask | board.cells[cell], 0)
+            if ((seenCellMasks & pairMustContain) === 0) continue
+
+            logicStepDescription?.push(
+                `${this.constraintName} at ${cellName(cell1, board.size)},${cellName(cell2, board.size)} must contain ${maskToString(pairMustContain, board.size)}, which removes that value from any cells seen by the full pair`,
+            )
+
+            const results = seenByBoth.map(
+                (cell) => board.clearCellMask(cell, pairMustContain!),
+            )
+
+            const invalidIndex = results.indexOf(ConstraintResult.INVALID)
+            if (invalidIndex >= 0) {
+                logicStepDescription?.push(
+                    `, ${cellName(seenByBoth[invalidIndex], board.size)} has no more candidates. Board is invalid!`,
+                )
+                return ConstraintResult.INVALID
+            }
+
+            if (results.some((res) => res === ConstraintResult.CHANGED)) {
+                return ConstraintResult.CHANGED
+            }
+        }
+
+        return ConstraintResult.UNCHANGED
     }
 }
 
