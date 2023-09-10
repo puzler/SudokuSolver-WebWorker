@@ -118,6 +118,11 @@ export type BoardDefinition = {
         collector?: (boardData: any) => undefined|null|any[]
         lines?: (instance: any) => any[][]
       }
+      quadruple?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cells?: (instance: any) => any[]
+        values?: (instance: any) => number[]
+      }
   }
   indexForAddress?: (address: any, size: number) => number
 }

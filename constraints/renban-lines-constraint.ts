@@ -262,7 +262,7 @@ export default class RenbanLineConstraint extends Constraint {
     for (let i = 1; i <= this.cells.length; i += 1) {
       baseCombo |= valueBit(i)
     }
-    
+
     const combos = [baseCombo]
     for (let i = 1; i < board.size - this.cells.length + 1; i += 1) {
       combos.push(baseCombo << i)
@@ -273,8 +273,19 @@ export default class RenbanLineConstraint extends Constraint {
       (combo) => {
         if ((allCellsMask & combo) !== combo) return false
 
+        let foundVals = 0
+        for (let cell of this.cells) {
+          if ((board.cells[cell] & combo) === 0) return false
+          foundVals |= board.cells[cell] & combo
+        }
+        if ((foundVals & combo) !== combo) return false
+
+        const unresolvedValuePositions = Array.from(
+          { length: board.size + 1 },
+          (_, i) => null as null|Set<number>,
+        )
+
         const usedCells: Set<number> = new Set()
-        const unresolvedVals: Record<number, Set<number>> = {}
 
         for (let value of valuesList(combo)) {
           const availableCells = this.cells.filter(
@@ -284,29 +295,28 @@ export default class RenbanLineConstraint extends Constraint {
           if (availableCells.length === 0) return false
           if (availableCells.length === 1) {
             usedCells.add(availableCells[0])
-            for (let set of Object.values(unresolvedVals)) {
-              set.delete(availableCells[0])
+            for (let positions of unresolvedValuePositions) {
+              if (!positions) continue
+              positions.delete(availableCells[0])
             }
           } else {
-            unresolvedVals[value] = new Set(availableCells)
+            unresolvedValuePositions[value] = new Set(availableCells)
           }
         }
 
-        while (Object.keys(unresolvedVals).length > 0) {
-          const keys = Object.keys(unresolvedVals).map((v) => parseInt(v, 10))
-
-          // check for any length 0 or 1
+        while (unresolvedValuePositions.some((set) => !!set && set.size > 0)) {
           let jumpToStart = false
-          for (let key of keys) {
-            const set = unresolvedVals[key]
+          for (let i = 1; i <= board.size; i += 1) {
+            const set = unresolvedValuePositions[i]
+            if (!set) continue
             if (set.size === 0) return false
             if (set.size === 1) {
               const cell = Array.from(set)[0]
               usedCells.add(cell)
-              delete unresolvedVals[key]
-              for (let remKey of keys) {
-                if (key === remKey) continue
-                unresolvedVals[remKey].delete(cell)
+              unresolvedValuePositions[i] = null
+              for (let positions of unresolvedValuePositions) {
+                if (!positions) continue
+                positions.delete(cell)
               }
               jumpToStart = true
               break
@@ -315,24 +325,36 @@ export default class RenbanLineConstraint extends Constraint {
           if (jumpToStart) continue
 
           // look for value groups that are equal
+          const unresolvedValues = unresolvedValuePositions.reduce(
+            (list, set, value) => {
+              if (!set) return list
+              return [...list, value]
+            },
+            [] as number[],
+          )
+
           let setFound = false
-          for (let groupSize = 2; groupSize < keys.length; groupSize += 1) {
+          for (let groupSize = 2; groupSize <= unresolvedValues.length; groupSize += 1) {
             if (setFound) break
-            for (let group of combinations(keys, groupSize)) {
+            for (let group of combinations(unresolvedValues, groupSize)) {
               const comboSet: Set<number> = new Set()
-              for (let key of group) {
-                const set = unresolvedVals[key]
-                unresolvedVals[key].forEach((c) => comboSet.add(c))
+              for (let value of group) {
+                const set = unresolvedValuePositions[value]!
+                set.forEach((c) => comboSet.add(c))
               }
 
+              if (comboSet.size < groupSize) return false
               if (comboSet.size === groupSize) {
                 // We found a set
                 setFound = true
-                for (let key of keys) {
-                  if (group.includes(key)) {
-                    delete unresolvedVals[key]
+                for (let i = 1; i <= board.size; i += 1) {
+                  const set = unresolvedValuePositions[i]
+                  if (!set) continue
+
+                  if (group.includes(i)) {
+                    unresolvedValuePositions[i] = null
                   } else {
-                    comboSet.forEach((c) => unresolvedVals[key].delete(c))
+                    comboSet.forEach((c) => set.delete(c))
                   }
                 }
                 comboSet.forEach((c) => usedCells.add(c))
@@ -340,6 +362,7 @@ export default class RenbanLineConstraint extends Constraint {
               }
             }
           }
+          if (setFound) continue
 
           break
         }

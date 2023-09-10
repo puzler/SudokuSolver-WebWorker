@@ -11,6 +11,7 @@ import { register as registerWhisperConstraints } from './constraints/whisper-li
 import { register as registerBetweenLineConstraints } from './constraints/between-lines-constraint'
 import { register as registerRenbanLineConstraints } from './constraints/renban-lines-constraint'
 import { register as registerThermometerConstraints } from './constraints/thermometer-constraint'
+import { register as registerKnownDigitsInCellsConstraint } from './constraints/known-digits-in-cells-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -26,4 +27,5 @@ export default function registerAllConstraints() {
   registerBetweenLineConstraints()
   registerRenbanLineConstraints()
   registerThermometerConstraints()
+  registerKnownDigitsInCellsConstraint()
 }
