@@ -99,11 +99,23 @@ export type BoardDefinition = {
         lines?: (instance: any) => any[][]
       }
       betweenline?: {
-        collector?: (boardData: any) => undefined|null|any[],
+        collector?: (boardData: any) => undefined|null|any[]
         lines?: (instance: any) => any[][]
       }
       renban?: {
-        collector?: (boardData: any) => undefined|null|any[],
+        collector?: (boardData: any) => undefined|null|any[]
+        lines?: (instance: any) => any[][]
+      }
+      thermometer?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        lines?: (instance: any) => any[][]
+      }
+      slowthermometer?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        lines?: (instance: any) => any[][]
+      }
+      fastthermometer?: {
+        collector?: (boardData: any) => undefined|null|any[]
         lines?: (instance: any) => any[][]
       }
   }

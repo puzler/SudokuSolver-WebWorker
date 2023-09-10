@@ -56,7 +56,7 @@ export default class WhisperLineConstraint extends Constraint {
       )
     }
 
-    return Math.min(...results) as 0|1|2
+    return Math.max(...results) as 0|1|2
   }
 
   enforce(board: Board, cellIndex: number, value: number) {
@@ -111,7 +111,7 @@ export default class WhisperLineConstraint extends Constraint {
     }
 
     if (results.length === 0) return ConstraintResult.UNCHANGED
-    return Math.min(...results) as 0|1|2
+    return Math.max(...results) as 0|1|2
   }
 }
 

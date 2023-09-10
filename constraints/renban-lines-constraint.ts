@@ -51,7 +51,7 @@ export default class RenbanLineConstraint extends Constraint {
       const cell1Mask = cell1UsedValues.reduce((mask, used, value) => (used ? mask | valueBit(value) : mask), 0)
       const cell2Mask = cell2UsedValues.reduce((mask, used, value) => (used ? mask | valueBit(value) : mask), 0)
 
-      return Math.min(
+      return Math.max(
         board.keepCellMask(cell1, cell1Mask),
         board.keepCellMask(cell2, cell2Mask),
       ) as 0|1|2
@@ -80,7 +80,7 @@ export default class RenbanLineConstraint extends Constraint {
       allCombosMask |= comboMask
     }
 
-    return Math.min(
+    return Math.max(
       ...this.cells.map(
         (cell) => board.keepCellMask(cell, allCombosMask),
       ),

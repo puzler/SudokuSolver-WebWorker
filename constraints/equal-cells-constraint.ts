@@ -31,7 +31,7 @@ export default class EqualCellsConstraint extends Constraint {
       board.addCloneWeakLinks(cell1, cell2)
     }
 
-    return ConstraintResult.UNCHANGED
+    return ConstraintResult.CHANGED
   }
 
   enforce(board: Board, cellIndex: number, value: number) {

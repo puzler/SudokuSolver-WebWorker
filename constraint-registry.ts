@@ -10,6 +10,7 @@ import { register as registerInequalityConstraints } from './constraints/inequal
 import { register as registerWhisperConstraints } from './constraints/whisper-line-constraint'
 import { register as registerBetweenLineConstraints } from './constraints/between-lines-constraint'
 import { register as registerRenbanLineConstraints } from './constraints/renban-lines-constraint'
+import { register as registerThermometerConstraints } from './constraints/thermometer-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -24,4 +25,5 @@ export default function registerAllConstraints() {
   registerWhisperConstraints()
   registerBetweenLineConstraints()
   registerRenbanLineConstraints()
+  registerThermometerConstraints()
 }

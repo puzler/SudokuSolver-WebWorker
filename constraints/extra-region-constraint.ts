@@ -20,11 +20,10 @@ export default class ExtraRegionConstraint extends Constraint {
   cellsSet: Set<number>
 
   init(board: Board, isRepeat: boolean) {
-    if (!isRepeat) {
-      board.addRegion(this.specificName, this.cells, 'extra region constraint', this);
-    }
+    if (isRepeat) return ConstraintResult.UNCHANGED
 
-    return ConstraintResult.UNCHANGED;
+    board.addRegion(this.specificName, this.cells, 'extra region constraint', this);
+    return ConstraintResult.CHANGED
   }
 }
 

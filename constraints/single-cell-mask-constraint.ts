@@ -2,7 +2,7 @@ import type Board from '../board'
 import { registerConstraint } from '../constraint-builder'
 import { cellName, valueBit } from '../solve-utility'
 import { cellIndexFromAddress } from '../solve-worker'
-import Constraint from './constraint'
+import Constraint, { ConstraintResult } from './constraint'
 
 export default class SingleCellMaskConstraint extends Constraint {
   constructor(constraintName: string, board: Board, { cell, mask }: { cell: any, mask: number }) {
@@ -18,6 +18,8 @@ export default class SingleCellMaskConstraint extends Constraint {
   mask: number
 
   init(board: Board, isRepeat: boolean) {
+    if (isRepeat) return ConstraintResult.UNCHANGED
+
     return board.keepCellMask(this.cell, this.mask)
   }
 }

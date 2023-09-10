@@ -1,8 +1,8 @@
 import type Board from '../board'
-import Constraint, { ConstraintResult } from './constraint'
-import { registerAggregateConstraint } from '../constraint-builder'
+import Constraint from './constraint'
+import { registerAggregateConstraint, registerConstraint } from '../constraint-builder'
 import { cellIndexFromAddress } from '../solve-worker'
-import { cellName, hasValue, maxValue, minValue, valueBit, valuesList } from '../solve-utility'
+import { cellName, maxValue, minValue, valuesList } from '../solve-utility'
 
 export default class InequalityConstraint extends Constraint {
   constructor(constraintName: string, specificName: string, board: Board, params: { originCell: number, inequalCells: number[], inequality: 'lt'|'gt' }) {
@@ -36,7 +36,7 @@ export default class InequalityConstraint extends Constraint {
 
     if (!isRepeat) this.initWeakLinks(board)
 
-    return Math.min(...results) as 0|1|2
+    return Math.max(...results) as 0|1|2
   }
 
   checkValues(originVal: number, inequalVal: number) {

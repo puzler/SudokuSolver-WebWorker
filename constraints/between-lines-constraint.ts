@@ -1,7 +1,7 @@
 import type Board from '../board'
 import Constraint, { ConstraintResult } from './constraint'
 import { registerConstraint } from '../constraint-builder'
-import { cellName, hasValue, maskToString, maxValue, minValue, valueBit, valuesList } from '../solve-utility'
+import { cellName, maskToString, maxValue, minValue } from '../solve-utility'
 import { cellIndexFromAddress } from '../solve-worker'
 
 export default class BetweenLinesConstraint extends Constraint {
