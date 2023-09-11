@@ -35,7 +35,7 @@ export default class Constraint {
     constraintName: string
     specificName: string
     size: number
-    allValues: any
+    allValues: number
     givenBit: number
     cellIndex: (row: number, col: number) => number
     cellCoords: (cellIndex: number) => number[]

@@ -123,6 +123,11 @@ export type BoardDefinition = {
         cells?: (instance: any) => any[]
         values?: (instance: any) => number[]
       }
+      xsum?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cells?: (instance: any, size: number) => any[]
+        value?: (instance: any) => undefined|null|number
+      }
   }
   indexForAddress?: (address: any, size: number) => number
 }

@@ -12,6 +12,7 @@ import { register as registerBetweenLineConstraints } from './constraints/betwee
 import { register as registerRenbanLineConstraints } from './constraints/renban-lines-constraint'
 import { register as registerThermometerConstraints } from './constraints/thermometer-constraint'
 import { register as registerKnownDigitsInCellsConstraint } from './constraints/known-digits-in-cells-constraint'
+import { register as registerXSumConstraint } from './constraints/x-sum-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -28,4 +29,5 @@ export default function registerAllConstraints() {
   registerRenbanLineConstraints()
   registerThermometerConstraints()
   registerKnownDigitsInCellsConstraint()
+  registerXSumConstraint()
 }

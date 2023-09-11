@@ -1235,9 +1235,9 @@ class Board {
 
             const result = logicalStep.step(this, desc);
             if (result === LogicResult.INVALID) {
-                return { desc: desc[0], invalid: true };
+                return { desc: desc.join(''), invalid: true };
             } else if (result === LogicResult.CHANGED) {
-                return { desc: desc[0], changed: true };
+                return { desc: desc.join(''), changed: true };
             }
         }
 

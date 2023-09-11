@@ -29,9 +29,9 @@ export default class SumGroup {
     }
 
     boardSize: number
-    givenBit: any
+    givenBit: number
     cells: number[]
-    includeMask: any
+    includeMask: number
     cellsString: any
 
     minMaxSum(board: Board) {
@@ -166,7 +166,7 @@ export default class SumGroup {
     }
 
 	restrictSumHelper(board: Board, sums: number[]) {
-        const resultMasks = new Array(this.cells.length);
+        const resultMasks: number[] = new Array(this.cells.length);
         for (let i = 0; i < this.cells.length; i++) {
             const cell = this.cells[i];
             const mask = board.cells[cell];
@@ -230,12 +230,14 @@ export default class SumGroup {
 		}
 
 		let newMasks = [] as Array<any>;
+        let sumCombinations: number[] = [];
 
 		// Check for a memo
 		const memoKey = this.cellsString + '|RestrictSum|S' + appendInts(sums) + "|M" + appendCellValueKey(board, this.cells);
 		const memo = board.getMemo(memoKey);
 		if (memo) {
 			newMasks = memo.newUnsetMasks;
+            sumCombinations = memo.sumCombinations;
 		} else {
 			let unsetMask = this.unsetMask(board);
 
@@ -264,13 +266,28 @@ export default class SumGroup {
 							for (let i = 0; i < numUnsetCells; i++) {
 								newMasks[i] |= valueBit(perm[i]);
 							}
+
+                            console.log(perm)
+                            let permMask = perm.reduce((mask: number, value: number) => mask | valueBit(value), 0);
+                            if (givenSum > 0) {
+                                this.cells.map((cell) => this.getGivenValue(cell)).forEach(
+                                    (givenValue) => {
+                                        if (givenValue !== 0) {
+                                            console.log(givenValue)
+                                            permMask |= valueBit(givenValue)
+                                        }
+                                    }
+                                )
+                            }
+                            console.log(permMask)
+                            if (!sumCombinations.includes(permMask)) sumCombinations.push(permMask);
 						}
 					}
 				}
 			}
 
 			// Store the memo
-			board.storeMemo(memoKey, { newUnsetMasks: newMasks });
+			board.storeMemo(memoKey, { newUnsetMasks: newMasks, sumCombinations });
 		}
 
 		let changed = false;
@@ -292,7 +309,7 @@ export default class SumGroup {
             }
 		}
 		const constraintResult = invalid ? ConstraintResult.INVALID : (changed ? ConstraintResult.CHANGED : ConstraintResult.UNCHANGED);
-		return { constraintResult: constraintResult, masks: resultMasks };
+		return { constraintResult: constraintResult, masks: resultMasks, sumCombinations };
     }
 
 	applySumResult(board: Board, resultMasks: number[]) {
