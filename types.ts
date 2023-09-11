@@ -128,6 +128,11 @@ export type BoardDefinition = {
         cells?: (instance: any, size: number) => any[]
         value?: (instance: any) => undefined|null|number
       }
+      sandwichsum?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cells?: (instance: any, size: number) => any[]
+        value?: (instance: any) => undefined|null|number
+      }
   }
   indexForAddress?: (address: any, size: number) => number
 }

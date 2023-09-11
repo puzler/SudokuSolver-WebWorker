@@ -12,16 +12,18 @@ import {
     appendInts,
     permutations,
     hasValue,
+    maskToString,
 } from "./solve-utility";
 
 export default class SumGroup {
-    constructor(board: Board, cells: number[], excludeValue = 0) {
+    constructor(board: Board, cells: number[], excludeValues: number[] = []) {
         this.boardSize = board.size;
         this.givenBit = board.givenBit;
         this.cells = [...cells].sort((a: number, b: number) => a - b);
-        if (excludeValue >= 1 && excludeValue <= board.size) {
-            this.includeMask = board.allValues ^ valueBit(excludeValue);
-            this.cellsString = cellsKey(`SumGroupE${excludeValue}`, this.cells, this.boardSize);
+        if (excludeValues.length) {
+            const excludeMask = excludeValues.reduce((mask, value) => (value > 0 && value <= board.size) ? mask | valueBit(value) : mask, 0)
+            this.includeMask = board.allValues ^ excludeMask;
+            this.cellsString = cellsKey(`SumGroupE${maskToString(excludeMask, board.size)}`, this.cells, this.boardSize);
         } else {
             this.includeMask = board.allValues;
             this.cellsString = cellsKey('SumGroup', this.cells, this.boardSize);
@@ -206,11 +208,24 @@ export default class SumGroup {
 			const unsetCell = unsetCells[0];
 			const curMask = board.cells[unsetCell] & this.includeMask;
 
+            let sumCombinations: number[] = []
+            let curCombo = 0
+            if (givenSum > 0) {
+                this.cells.map((cell) => this.getGivenValue(board.cells[cell])).forEach(
+                    (givenValue) => {
+                        if (givenValue !== 0) {
+                            curCombo |= valueBit(givenValue)
+                        }
+                    }
+                )
+            }
+
 			let newMask = 0;
 			for (let sum of sums) {
 				const value = sum - givenSum;
 				if (value >= 1 && value <= this.boardSize) {
 					newMask |= valueBit(value);
+                    sumCombinations.push(curCombo | valueBit(value))
 				} else if (value > this.boardSize) {
 					break;
 				}
@@ -226,7 +241,7 @@ export default class SumGroup {
 				}
 				constraintResult = newMask !== 0 ? ConstraintResult.CHANGED : ConstraintResult.INVALID;
 			}
-			return { constraintResult: constraintResult, masks: resultMasks };
+			return { constraintResult: constraintResult, masks: resultMasks, sumCombinations };
 		}
 
 		let newMasks = [] as Array<any>;
@@ -267,19 +282,14 @@ export default class SumGroup {
 								newMasks[i] |= valueBit(perm[i]);
 							}
 
-                            console.log(perm)
                             let permMask = perm.reduce((mask: number, value: number) => mask | valueBit(value), 0);
                             if (givenSum > 0) {
-                                this.cells.map((cell) => this.getGivenValue(cell)).forEach(
-                                    (givenValue) => {
-                                        if (givenValue !== 0) {
-                                            console.log(givenValue)
-                                            permMask |= valueBit(givenValue)
-                                        }
-                                    }
-                                )
+                                for (let cell of this.cells) {
+                                    const value = this.getGivenValue(board.cells[cell])
+                                    console.log('cell given value', value, maskToString(board.cells[cell], board.size))
+                                    if (value > 0) permMask |= valueBit(value)
+                                }
                             }
-                            console.log(permMask)
                             if (!sumCombinations.includes(permMask)) sumCombinations.push(permMask);
 						}
 					}

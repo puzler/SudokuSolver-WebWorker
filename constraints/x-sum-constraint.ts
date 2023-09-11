@@ -17,7 +17,7 @@ export default class XSumConstraint extends Constraint {
     this.sum = params.sum
     this.sumGroups = Array.from({ length: board.size - 2 }, (_, i) => i + 2).reduce(
       (groups, groupSize) => {
-        const group = new SumGroup(board, this.cells.slice(1, groupSize), groupSize)
+        const group = new SumGroup(board, this.cells.slice(1, groupSize), [groupSize])
         if (!group.isSumPossible(board, this.sum - groupSize)) return groups
         return [
           ...groups,
@@ -106,7 +106,6 @@ export default class XSumConstraint extends Constraint {
         possibleSumComboMasks.push(
           ...sumCombinations.reduce(
             (list, mask) => {
-              console.log('sum combo mask', mask, maskToString(mask, board.size))
               const fullMask = mask | valueBit(popcount(mask) + 1)
               if (possibleSumComboMasks.includes(fullMask)) return list
               if (list.includes(fullMask)) return list
@@ -120,9 +119,6 @@ export default class XSumConstraint extends Constraint {
         )
       }
     }
-    console.log('test value bit', valueBit(0))
-    console.log('sum combos', possibleSumComboMasks.map((mask) => maskToString(mask, board.size)))
-    console.log('cell masks', possibleCellMasks.map((mask) => maskToString(mask, board.size)))
 
     const guaranteedCellsCount = minValue(board.cells[this.cells[0]])
     let changed = false
@@ -214,7 +210,6 @@ export default class XSumConstraint extends Constraint {
         const seenByAll = seenCells[0].filter(
           (cell) => seenCells.every((cellGroup) => cellGroup.includes(cell)),
         )
-        console.log('seen by all', value, seenByAll.map((cell) => cellName(cell, board.size)))
         if (seenByAll.length) requiredValueSeenCells.push({ value, cells: seenByAll })
       }
 
