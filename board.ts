@@ -267,12 +267,6 @@ class Board {
     keepCellMask(cellIndex: number, cellMask: number) {
         const origMask = this.cells[cellIndex] & this.allValues;
         const newMask = origMask & cellMask;
-        if (cellIndex === 38) {
-            console.log('origMask', origMask.toString(2))
-            console.log('cellMask', cellMask.toString(2))
-            console.log('newMask ', newMask.toString(2))
-            console.log('unchanged', newMask === origMask)
-        }
         if (newMask === origMask) {
             return ConstraintResult.UNCHANGED;
         }

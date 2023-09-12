@@ -14,6 +14,7 @@ import { register as registerThermometerConstraints } from './constraints/thermo
 import { register as registerKnownDigitsInCellsConstraint } from './constraints/known-digits-in-cells-constraint'
 import { register as registerXSumConstraint } from './constraints/x-sum-constraint'
 import { register as registerSandwichSumConstraint } from './constraints/sandwich-sum-constraint'
+import { register as registerRegionIndexCellConstraint } from './constraints/region-index-cell-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -32,4 +33,5 @@ export default function registerAllConstraints() {
   registerKnownDigitsInCellsConstraint()
   registerXSumConstraint()
   registerSandwichSumConstraint()
+  registerRegionIndexCellConstraint()
 }

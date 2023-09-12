@@ -286,7 +286,6 @@ export default class SumGroup {
                             if (givenSum > 0) {
                                 for (let cell of this.cells) {
                                     const value = this.getGivenValue(board.cells[cell])
-                                    console.log('cell given value', value, maskToString(board.cells[cell], board.size))
                                     if (value > 0) permMask |= valueBit(value)
                                 }
                             }

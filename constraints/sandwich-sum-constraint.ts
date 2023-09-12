@@ -544,7 +544,7 @@ export function register() {
   registerConstraint(
     'sandwichsum',
     (board, params, definition) => {
-      let cells: undefined|any[]
+      let cells: undefined|null|any[]
       if (definition?.cells) {
         cells = definition.cells(params, board.size)
       } else if (params.cell) {
@@ -561,12 +561,12 @@ export function register() {
           if (isRowSum) {
             cells = Array.from(
               { length: board.size },
-              (_, i) => `R${i + 1}C${column}`
+              (_, i) => `R${row}C${i + 1}`
             )
           } else if (isColumnSum) {
             cells = Array.from(
               { length: board.size },
-              (_, i) => `R${row}C${i + 1}`
+              (_, i) => `R${i + 1}C${column}`
             )
           }
         }

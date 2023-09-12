@@ -133,6 +133,29 @@ export type BoardDefinition = {
         cells?: (instance: any, size: number) => any[]
         value?: (instance: any) => undefined|null|number
       }
+      rowindexcell?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cell?: (instance: any) => any
+        cells?: (instance: any, size: number) => any[]
+        value?: (instance: any) => number
+      }
+      columnindexcell?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cell?: (instance: any) => any
+        cells?: (instance: any, size: number) => any[]
+        value?: (instance: any) => number
+      }
+      regionindexcell?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cell?: (instance: any) => any
+        cells?: (instance: any, boardData: any) => any[]
+        value?: (instance: any, boardData: any) => number
+      }
+      numberedRooms?: {
+        collector?: (boardData: any) => undefined|null|any[]
+        cells?: (instance: any, size: number) => any[]
+        value?: (instance: any) => number
+      }
   }
   indexForAddress?: (address: any, size: number) => number
 }
