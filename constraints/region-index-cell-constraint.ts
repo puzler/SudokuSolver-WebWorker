@@ -227,27 +227,25 @@ export function register() {
         cells = definition.cells(params, board.size)
       } else if (params.cell) {
         const match = (params.cell as string).match(/^R(?<row>-{0,1}\d+)C(?<column>-{0,1}\d+)$/)
-        if (match?.groups) {
-          const { row: rawRow, column: rawColumn } = match.groups
-          const row = parseInt(rawRow, 10)
-          const column = parseInt(rawColumn, 10)
+        if (!match?.groups) return []
 
-          const isColumnClue = row === 0 || row === board.size + 1
-          const isRowClue = column === 0 || column === board.size + 1
-          if (isRowClue && isColumnClue) return []
+        const { row: rawRow, column: rawColumn } = match.groups
+        const row = parseInt(rawRow, 10)
+        const column = parseInt(rawColumn, 10)
+        if (!Number.isFinite(row) || !Number.isFinite(column)) return []
 
-          if (isRowClue) {
-            cells = Array.from(
-              { length: board.size },
-              (_, i) => `R${row}C${row === 0 ? i + 1 : board.size - i}`,
-            )
-          } else if (isColumnClue) {
-            cells = Array.from(
-              { length: board.size },
-              (_, i) => `R${column === 0 ? i + 1 : board.size - i}C${column}`
-            )
-          }
-        }
+        const isColumnClue = row <= 0 || row > board.size
+        const isRowClue = column <= 0 || column > board.size
+        if (isRowClue === isColumnClue) return []
+
+        cells = Array.from(
+          { length: board.size },
+          (_, i) => {
+            const r = isRowClue ? row : (row <= 0 ? i + 1 : board.size - i)
+            const c = isColumnClue ? column : (column <= 0 ? i + 1 : board.size - i)
+            return `R${r}C${c}`
+          },
+        )
       }
       if (!cells?.length) return []
 
@@ -271,7 +269,7 @@ export function register() {
           if (!cell) return constraints
 
           let cells: undefined|null|any[]
-          let region: undefined|number
+          let region: undefined|null|number
           if (definition?.value) region = definition.value(instance, boardData)
           if (definition?.cells) cells = definition?.cells(instance, boardData)
 

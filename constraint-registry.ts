@@ -15,6 +15,7 @@ import { register as registerKnownDigitsInCellsConstraint } from './constraints/
 import { register as registerXSumConstraint } from './constraints/x-sum-constraint'
 import { register as registerSandwichSumConstraint } from './constraints/sandwich-sum-constraint'
 import { register as registerRegionIndexCellConstraint } from './constraints/region-index-cell-constraint'
+import { register as registerSkyscraperConstraint } from './constraints/skyscraper-constraint'
 
 export default function registerAllConstraints() {
   registerKillerCageConstraint()
@@ -34,4 +35,5 @@ export default function registerAllConstraints() {
   registerXSumConstraint()
   registerSandwichSumConstraint()
   registerRegionIndexCellConstraint()
+  registerSkyscraperConstraint()
 }

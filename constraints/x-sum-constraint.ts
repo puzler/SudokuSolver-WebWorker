@@ -252,9 +252,39 @@ export function register() {
   registerConstraint(
     'xsum',
     (board, params, definition) => {
-      const cells: any[] = definition?.cells ? definition.cells(params, board.size) : params.cells
       const sum: null|undefined|number = definition?.value ? definition.value(params) : params.value
       if (sum === null || sum === undefined) return []
+
+      let cells: null|undefined|any[]
+      if (definition?.cells) {
+        cells = definition.cells(params, board.size)
+      } else if (params.cell) {
+        const match = (params.cell as string).match(/^R(?<row>-{0,1}\d+)C(?<column>-{0,1}\d+)$/)
+        if (!match?.groups) return []
+
+        const { row: rawRow, column: rawColumn } = match.groups
+        const row = parseInt(rawRow, 10)
+        const column = parseInt(rawColumn, 10)
+        if (!Number.isFinite(row) || !Number.isFinite(column)) return []
+
+        const isColumnClue = row <= 0 || row > board.size
+        const isRowClue = column <= 0 || column > board.size
+        if (isRowClue && isColumnClue) return []
+
+        if (isRowClue) {
+          cells = Array.from(
+            { length: board.size },
+            (_, i) => `R${row}C${row === 0 ? i + 1 : board.size - i}`,
+          )
+        } else if (isColumnClue) {
+          cells = Array.from(
+            { length: board.size },
+            (_, i) => `R${column === 0 ? i + 1 : board.size - i}C${column}`
+          )
+        }
+      }
+      if (!cells?.length) return []
+      
       return new XSumConstraint(
         board,
         { cells, sum },
